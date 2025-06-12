@@ -20,7 +20,7 @@ class PrisonForecastModels:
         self.model_metrics = {}
         self.feature_importance = {}
         
-    def prepare_features(self, data, target_column, lookback_window=6):
+    def prepare_features(self, data, target_column, lookback_window=3):
         """
         Prepare features for time series forecasting
         """
@@ -28,12 +28,12 @@ class PrisonForecastModels:
         df['date'] = pd.to_datetime(df['date'])
         df = df.sort_values('date')
         
-        # Create lag features
+        # Create lag features (reduced window to avoid too many NaNs)
         for lag in range(1, lookback_window + 1):
             df[f'{target_column}_lag_{lag}'] = df[target_column].shift(lag)
         
-        # Create rolling statistics
-        for window in [3, 6, 12]:
+        # Create rolling statistics (smaller windows)
+        for window in [3, 6]:
             df[f'{target_column}_rolling_mean_{window}'] = df[target_column].rolling(window=window).mean()
             df[f'{target_column}_rolling_std_{window}'] = df[target_column].rolling(window=window).std()
         
@@ -43,7 +43,10 @@ class PrisonForecastModels:
         df['year'] = df['date'].dt.year
         df['days_from_start'] = (df['date'] - df['date'].min()).dt.days
         
-        # Remove rows with NaN values
+        # Fill NaN values in rolling statistics with forward fill
+        df = df.ffill()
+        
+        # Remove rows with remaining NaN values
         df = df.dropna()
         
         return df
@@ -75,31 +78,43 @@ class PrisonForecastModels:
         
         best_model = None
         best_score = float('inf')
+        best_model_name = 'linear_regression'  # Default fallback
         
         for name, model in models.items():
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
-            
-            mse = mean_squared_error(y_test, y_pred)
-            mae = mean_absolute_error(y_test, y_pred)
-            r2 = r2_score(y_test, y_pred)
-            
-            self.model_metrics[f'population_{name}'] = {
-                'mse': mse,
-                'mae': mae,
-                'r2': r2,
-                'rmse': np.sqrt(mse)
-            }
-            
-            if mse < best_score:
-                best_score = mse
-                best_model = model
-                best_model_name = name
+            try:
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                
+                mse = mean_squared_error(y_test, y_pred)
+                mae = mean_absolute_error(y_test, y_pred)
+                r2 = r2_score(y_test, y_pred)
+                
+                self.model_metrics[f'population_{name}'] = {
+                    'mse': mse,
+                    'mae': mae,
+                    'r2': r2,
+                    'rmse': np.sqrt(mse)
+                }
+                
+                if mse < best_score:
+                    best_score = mse
+                    best_model = model
+                    best_model_name = name
+            except Exception as e:
+                print(f"Error training {name} model: {e}")
+                continue
+        
+        # Ensure we have a model
+        if best_model is None:
+            print("Warning: No models trained successfully, using linear regression as fallback")
+            best_model = LinearRegression()
+            best_model.fit(X_train, y_train)
+            best_model_name = 'linear_regression'
         
         self.models['population'] = best_model
         
         # Store feature importance for tree-based models
-        if hasattr(best_model, 'feature_importances_'):
+        if best_model is not None and hasattr(best_model, 'feature_importances_'):
             self.feature_importance['population'] = dict(zip(feature_cols, best_model.feature_importances_))
         
         print(f"Best population model: {best_model_name} (RMSE: {np.sqrt(best_score):.2f})")
@@ -136,31 +151,42 @@ class PrisonForecastModels:
         
         best_model = None
         best_score = float('inf')
+        best_model_name = 'linear_regression'
         
         for name, model in models.items():
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
-            
-            mse = mean_squared_error(y_test, y_pred)
-            mae = mean_absolute_error(y_test, y_pred)
-            r2 = r2_score(y_test, y_pred)
-            
-            self.model_metrics[f'staffing_{name}'] = {
-                'mse': mse,
-                'mae': mae,
-                'r2': r2,
-                'rmse': np.sqrt(mse)
-            }
-            
-            if mse < best_score:
-                best_score = mse
-                best_model = model
-                best_model_name = name
+            try:
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                
+                mse = mean_squared_error(y_test, y_pred)
+                mae = mean_absolute_error(y_test, y_pred)
+                r2 = r2_score(y_test, y_pred)
+                
+                self.model_metrics[f'staffing_{name}'] = {
+                    'mse': mse,
+                    'mae': mae,
+                    'r2': r2,
+                    'rmse': np.sqrt(mse)
+                }
+                
+                if mse < best_score:
+                    best_score = mse
+                    best_model = model
+                    best_model_name = name
+            except Exception as e:
+                print(f"Error training staffing {name} model: {e}")
+                continue
+        
+        if best_model is None:
+            print("Warning: No staffing models trained successfully, using linear regression as fallback")
+            best_model = LinearRegression()
+            best_model.fit(X_train, y_train)
+            best_model_name = 'linear_regression'
         
         self.models['staffing'] = best_model
         
         # Store feature importance
-        if hasattr(best_model, 'feature_importances_'):
+        if best_model is not None and hasattr(best_model, 'feature_importances_'):
             self.feature_importance['staffing'] = dict(zip(feature_cols, best_model.feature_importances_))
         
         print(f"Best staffing model: {best_model_name} (RMSE: {np.sqrt(best_score):.2f})")
@@ -197,31 +223,42 @@ class PrisonForecastModels:
         
         best_model = None
         best_score = float('inf')
+        best_model_name = 'linear_regression'
         
         for name, model in models.items():
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
-            
-            mse = mean_squared_error(y_test, y_pred)
-            mae = mean_absolute_error(y_test, y_pred)
-            r2 = r2_score(y_test, y_pred)
-            
-            self.model_metrics[f'resource_{name}'] = {
-                'mse': mse,
-                'mae': mae,
-                'r2': r2,
-                'rmse': np.sqrt(mse)
-            }
-            
-            if mse < best_score:
-                best_score = mse
-                best_model = model
-                best_model_name = name
+            try:
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+                
+                mse = mean_squared_error(y_test, y_pred)
+                mae = mean_absolute_error(y_test, y_pred)
+                r2 = r2_score(y_test, y_pred)
+                
+                self.model_metrics[f'resource_{name}'] = {
+                    'mse': mse,
+                    'mae': mae,
+                    'r2': r2,
+                    'rmse': np.sqrt(mse)
+                }
+                
+                if mse < best_score:
+                    best_score = mse
+                    best_model = model
+                    best_model_name = name
+            except Exception as e:
+                print(f"Error training resource {name} model: {e}")
+                continue
+        
+        if best_model is None:
+            print("Warning: No resource models trained successfully, using linear regression as fallback")
+            best_model = LinearRegression()
+            best_model.fit(X_train, y_train)
+            best_model_name = 'linear_regression'
         
         self.models['resource'] = best_model
         
         # Store feature importance
-        if hasattr(best_model, 'feature_importances_'):
+        if best_model is not None and hasattr(best_model, 'feature_importances_'):
             self.feature_importance['resource'] = dict(zip(feature_cols, best_model.feature_importances_))
         
         print(f"Best resource model: {best_model_name} (RMSE: {np.sqrt(best_score):.2f})")
@@ -257,18 +294,22 @@ class PrisonForecastModels:
         last_values = historical_data.tail(1)
         predictions = []
         
-        for _ in range(periods):
+        for i in range(periods):
             # For demonstration, we'll add some trend and noise
             # In practice, you'd use proper feature engineering
             trend = np.random.normal(1.01, 0.02)  # Small positive trend
             noise = np.random.normal(0, 0.05)
             
+            pred = 0  # Initialize pred
             if model_name == 'population':
                 pred = last_values['total_prisoners'].iloc[0] * trend + noise * 1000
             elif model_name == 'staffing':
                 pred = last_values['total_staff'].iloc[0] * trend + noise * 100
             elif model_name == 'resource':
                 pred = last_values['total_monthly_cost'].iloc[0] * trend + noise * 100000
+            else:
+                # Fallback for unknown model types
+                pred = last_values.iloc[0, 1] * trend + noise * 100
             
             predictions.append(max(0, pred))  # Ensure non-negative predictions
         

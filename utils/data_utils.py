@@ -197,6 +197,19 @@ def generate_synthetic_data():
             df.to_csv(f'data/{key}.csv', index=False)
         
         print("Synthetic data generated and saved successfully")
+        
+        # Train models automatically after generating data
+        try:
+            from models.model_trainer import train_all_models
+            print("Training models with generated data...")
+            models = train_all_models(data)
+            if models:
+                print("Models trained and saved successfully")
+            else:
+                print("Warning: Model training failed")
+        except Exception as e:
+            print(f"Warning: Could not train models automatically: {e}")
+        
         return data
         
     except Exception as e:
