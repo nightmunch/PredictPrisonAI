@@ -55,16 +55,16 @@ def main():
     if page == "Dashboard Overview":
         show_dashboard_overview(data, models)
     elif page == "Population Forecast":
-        from pages.population_forecast import show_population_forecast
+        from modules.population_forecast import show_population_forecast
         show_population_forecast(data, models)
     elif page == "Staffing Forecast":
-        from pages.staffing_forecast import show_staffing_forecast
+        from modules.staffing_forecast import show_staffing_forecast
         show_staffing_forecast(data, models)
     elif page == "Resource Forecast":
-        from pages.resource_forecast import show_resource_forecast
+        from modules.resource_forecast import show_resource_forecast
         show_resource_forecast(data, models)
     elif page == "Model Performance":
-        from pages.model_performance import show_model_performance
+        from modules.model_performance import show_model_performance
         show_model_performance(data, models)
 
 def show_dashboard_overview(data, models):
