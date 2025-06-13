@@ -31,7 +31,7 @@ def main():
         [
             "Dashboard Overview",
             "Population Forecast",
-            "Staffing Forecast",
+            # "Staffing Forecast",  # Commented out - feature disabled
             "Resource Forecast",
             "Model Performance"
         ]
@@ -57,9 +57,9 @@ def main():
     elif page == "Population Forecast":
         from modules.population_forecast import show_population_forecast
         show_population_forecast(data, models)
-    elif page == "Staffing Forecast":
-        from modules.staffing_forecast import show_staffing_forecast
-        show_staffing_forecast(data, models)
+    # elif page == "Staffing Forecast":  # Commented out - feature disabled
+    #     from modules.staffing_forecast import show_staffing_forecast
+    #     show_staffing_forecast(data, models)
     elif page == "Resource Forecast":
         from modules.resource_forecast import show_resource_forecast
         show_resource_forecast(data, models)
@@ -78,9 +78,13 @@ def show_dashboard_overview(data, models):
         current_population = data['population_data']['total_prisoners'].iloc[-1]
         col1.metric("Current Prison Population", f"{current_population:,.0f}")
     
-    if 'staffing_data' in data:
-        current_staff = data['staffing_data']['total_staff'].iloc[-1]
-        col2.metric("Current Staff Count", f"{current_staff:,.0f}")
+    # if 'staffing_data' in data:  # Commented out - staffing feature disabled
+    #     current_staff = data['staffing_data']['total_staff'].iloc[-1]
+    #     col2.metric("Current Staff Count", f"{current_staff:,.0f}")
+    
+    if 'resource_data' in data:
+        daily_cost = data['resource_data']['daily_cost_per_prisoner'].iloc[-1]
+        col2.metric("Daily Cost per Prisoner", f"MYR {daily_cost:.2f}")
     
     if 'resource_data' in data:
         capacity_utilization = data['resource_data']['capacity_utilization'].iloc[-1]
