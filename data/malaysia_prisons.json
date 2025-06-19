@@ -1,0 +1,224 @@
+{
+  "Selangor": [
+    {
+      "id": "SEL001",
+      "name": "Sungai Buloh Prison Complex",
+      "capacity": 12000,
+      "security_level": "Maximum"
+    },
+    {
+      "id": "SEL002",
+      "name": "Kajang Prison",
+      "capacity": 4500,
+      "security_level": "Medium"
+    },
+    {
+      "id": "SEL003",
+      "name": "Kajang Women's Prison",
+      "capacity": 800,
+      "security_level": "Medium"
+    }
+  ],
+  "Sarawak": [
+    {
+      "id": "SWK001",
+      "name": "Puncak Borneo Prison",
+      "capacity": 3200,
+      "security_level": "Maximum"
+    },
+    {
+      "id": "SWK002",
+      "name": "Sibu Prison",
+      "capacity": 1800,
+      "security_level": "Medium"
+    },
+    {
+      "id": "SWK003",
+      "name": "Miri Prison",
+      "capacity": 1200,
+      "security_level": "Medium"
+    },
+    {
+      "id": "SWK004",
+      "name": "Bintulu Prison",
+      "capacity": 900,
+      "security_level": "Minimum"
+    },
+    {
+      "id": "SWK005",
+      "name": "Sri Aman Prison",
+      "capacity": 600,
+      "security_level": "Minimum"
+    },
+    {
+      "id": "SWK006",
+      "name": "Limbang Prison",
+      "capacity": 500,
+      "security_level": "Minimum"
+    }
+  ],
+  "Johor": [
+    {
+      "id": "JHR001",
+      "name": "Simpang Renggam Prison",
+      "capacity": 5500,
+      "security_level": "Maximum"
+    },
+    {
+      "id": "JHR002",
+      "name": "Kluang Prison",
+      "capacity": 2800,
+      "security_level": "Medium"
+    },
+    {
+      "id": "JHR003",
+      "name": "Johor Bahru Detention Centre",
+      "capacity": 1200,
+      "security_level": "Medium"
+    }
+  ],
+  "Sabah": [
+    {
+      "id": "SBH001",
+      "name": "Kota Kinabalu Prison",
+      "capacity": 2500,
+      "security_level": "Medium"
+    },
+    {
+      "id": "SBH002",
+      "name": "Kota Kinabalu Women's Prison",
+      "capacity": 400,
+      "security_level": "Medium"
+    },
+    {
+      "id": "SBH003",
+      "name": "Tawau Prison",
+      "capacity": 1800,
+      "security_level": "Medium"
+    },
+    {
+      "id": "SBH004",
+      "name": "Sandakan Prison",
+      "capacity": 1500,
+      "security_level": "Medium"
+    }
+  ],
+  "Perak": [
+    {
+      "id": "PRK001",
+      "name": "Taiping Prison",
+      "capacity": 2200,
+      "security_level": "Medium"
+    },
+    {
+      "id": "PRK002",
+      "name": "Tapah Prison",
+      "capacity": 1800,
+      "security_level": "Medium"
+    },
+    {
+      "id": "PRK003",
+      "name": "Kamunting Detention Centre",
+      "capacity": 800,
+      "security_level": "Maximum"
+    }
+  ],
+  "Kedah": [
+    {
+      "id": "KDH001",
+      "name": "Pokok Sena Prison",
+      "capacity": 1500,
+      "security_level": "Medium"
+    },
+    {
+      "id": "KDH002",
+      "name": "Sungai Petani Prison",
+      "capacity": 1200,
+      "security_level": "Medium"
+    },
+    {
+      "id": "KDH003",
+      "name": "Alor Star Prison",
+      "capacity": 800,
+      "security_level": "Minimum"
+    }
+  ],
+  "Pahang": [
+    {
+      "id": "PHG001",
+      "name": "Bentong Prison",
+      "capacity": 1200,
+      "security_level": "Medium"
+    },
+    {
+      "id": "PHG002",
+      "name": "Penor Prison",
+      "capacity": 900,
+      "security_level": "Minimum"
+    }
+  ],
+  "Penang": [
+    {
+      "id": "PNG001",
+      "name": "Penang Prison",
+      "capacity": 1200,
+      "security_level": "Medium"
+    },
+    {
+      "id": "PNG002",
+      "name": "Seberang Prai Prison",
+      "capacity": 800,
+      "security_level": "Minimum"
+    }
+  ],
+  "Melaka": [
+    {
+      "id": "MLK001",
+      "name": "Ayer Keroh Prison",
+      "capacity": 800,
+      "security_level": "Medium"
+    },
+    {
+      "id": "MLK002",
+      "name": "Sungai Udang Prison",
+      "capacity": 600,
+      "security_level": "Minimum"
+    },
+    {
+      "id": "MLK003",
+      "name": "Banda Hilir Prison",
+      "capacity": 400,
+      "security_level": "Minimum"
+    }
+  ],
+  "Negeri Sembilan": [
+    {
+      "id": "NSN001",
+      "name": "Seremban Prison",
+      "capacity": 1000,
+      "security_level": "Medium"
+    },
+    {
+      "id": "NSN002",
+      "name": "Jelebu Prison",
+      "capacity": 600,
+      "security_level": "Minimum"
+    }
+  ],
+  "Kelantan": [
+    {
+      "id": "KTN001",
+      "name": "Pengkalan Chepa Prison",
+      "capacity": 500,
+      "security_level": "Medium"
+    }
+  ],
+  "Terengganu": [
+    {
+      "id": "TRG001",
+      "name": "Marang Prison",
+      "capacity": 500,
+      "security_level": "Medium"
+    }
+  ]
+}
