@@ -193,8 +193,14 @@ def show_dashboard_overview(data, models, l):
         with col2:
             if selected_state != l["all_states"]:
                 prisons_in_state = data["malaysia_prisons"][selected_state]
+                prison_names = []
+                for prison in prisons_in_state:
+                    if isinstance(prison, dict):
+                        prison_names.append(prison["name"])
+                    else:
+                        prison_names.append(prison)
                 selected_prison = st.selectbox(
-                    l["prison_selector"], [l["all_prisons_in_state"]] + prisons_in_state
+                    l["prison_selector"], [l["all_prisons_in_state"]] + prison_names
                 )
             else:
                 selected_prison = l["all_prisons"]
