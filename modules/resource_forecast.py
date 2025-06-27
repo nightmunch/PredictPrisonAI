@@ -82,6 +82,7 @@ def show_resource_forecast(data, models):
             cost_adjustment,
             efficiency_target,
             title_suffix,
+            population_ratio,
         )
 
     with tab2:
@@ -210,6 +211,7 @@ def show_cost_forecast_tab(
     cost_adjustment,
     efficiency_target,
     title_suffix,
+    population_ratio=1.0,
 ):
     """
     Show cost forecast tab with filtered data
@@ -223,6 +225,7 @@ def show_cost_forecast_tab(
         forecast_months,
         cost_adjustment,
         efficiency_target,
+        population_ratio,
     )
 
     if forecast_data is not None:
@@ -239,7 +242,12 @@ def show_cost_forecast_tab(
 
 
 def generate_filtered_resource_forecast(
-    resource_data, population_data, months, cost_inflation, efficiency_improvement
+    resource_data,
+    population_data,
+    months,
+    cost_inflation,
+    efficiency_improvement,
+    population_ratio=1.0,
 ):
     """
     Generate resource forecast based on filtered data
@@ -247,7 +255,11 @@ def generate_filtered_resource_forecast(
     try:
         # Get current values from filtered data
         current_cost = resource_data["total_monthly_cost"].iloc[-1]
-        current_population = population_data["total_prisoners"].iloc[-1]
+        current_population = (
+            population_data["total_prisoners"].iloc[-1] * population_ratio
+            if population_ratio < 1.0
+            else population_data["total_prisoners"].iloc[-1]
+        )
         current_daily_cost = (
             current_cost / 30 / current_population if current_population > 0 else 0
         )
@@ -272,7 +284,11 @@ def generate_filtered_resource_forecast(
         }
 
         current_efficiency = resource_data["energy_efficiency"].iloc[-1]
-        current_capacity = resource_data["total_capacity"].iloc[-1]
+        current_capacity = (
+            resource_data["total_capacity"].iloc[-1] * population_ratio
+            if population_ratio < 1.0
+            else resource_data["total_capacity"].iloc[-1]
+        )
 
         for i, pop in enumerate(population_forecast):
             # Apply cost inflation

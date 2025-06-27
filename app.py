@@ -345,16 +345,30 @@ def show_dashboard_overview(data, models, l):
                     mime="text/csv",
                 )
     with action_col3:
-        if st.button(l["model_status_check"]):
-            if models:
-                st.success(l["all_models_operational"])
-                for model_name in models.keys():
-                    st.write(f"\u2705 {model_name.replace('_', ' ').title()}")
-            else:
-                st.warning(l["some_models_need_retraining"])
-                # Optionally show retraining info if available
-                # if "retraining_info" in model_status:
-                #     st.info(model_status["retraining_info"])
+        if st.button("Export State/Prison Detail Data"):
+            if data:
+                # Filter by current state/prison selection if not 'All States'
+                detail_df = data["prison_detail_data"]
+                if (
+                    "selected_state" in locals()
+                    and selected_state != l["all_states"]
+                    and selected_state in detail_df["state"].unique()
+                ):
+                    detail_df = detail_df[detail_df["state"] == selected_state]
+                    if (
+                        "selected_prison" in locals()
+                        and selected_prison != l["all_prisons_in_state"]
+                        and selected_prison in detail_df["prison_name"].unique()
+                    ):
+                        detail_df = detail_df[
+                            detail_df["prison_name"] == selected_prison
+                        ]
+                st.download_button(
+                    label="Download State/Prison Detail Data",
+                    data=detail_df.to_csv(index=False),
+                    file_name=f"prison_detail_data_{datetime.now().strftime('%Y%m%d')}.csv",
+                    mime="text/csv",
+                )
 
     # System information
     st.markdown("---")
