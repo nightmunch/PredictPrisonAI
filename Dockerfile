@@ -9,7 +9,7 @@ COPY data ./data
 COPY models ./models
 COPY modules ./modules
 COPY utils ./utils
-COPY app2.py ./app2.py
+COPY app.py ./app.py
 
 # Copy requirements files
 COPY requirements.txt ./requirements.txt
@@ -19,4 +19,4 @@ RUN ["uv", "pip", "install", "--system", "-r", "./requirements.txt"]
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app2.py"]
+CMD ["streamlit", "run", "app.py"]
