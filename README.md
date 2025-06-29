@@ -21,7 +21,7 @@ The Malaysia Prison Predictive Planning System addresses critical challenges in 
 
 - 🤖 **AI-Powered Forecasting**: Advanced machine learning models (Random Forest, Gradient Boosting, Linear Regression)
 - 📊 **Interactive Dashboard**: User-friendly Streamlit interface with real-time visualizations
-- 🌐 **Multi-Language Support**: Available in English and Malay (Bahasa Malaysia)
+- 🌐 **Multi-Language Support**: English and Malay (Bahasa Malaysia) via sidebar selector in a single app
 - 🔍 **Scenario Analysis**: Compare optimistic, pessimistic, base case, and policy change scenarios
 - 📈 **Performance Monitoring**: Model accuracy tracking and performance metrics
 - 🔒 **Offline Operation**: Complete local deployment for data security and privacy
@@ -57,52 +57,34 @@ cd malaysia-prison-forecasting
 #### 3. Create Virtual Environment (Recommended)
 
 ```bash
-# Create virtual environment
 python -m venv venv
-
-# Activate virtual environment
 venv\Scripts\activate
-
-# You should see (venv) in your terminal prompt
 ```
 
 #### 4. Install Dependencies
 
 ```bash
-# Install all required packages
-pip install streamlit pandas numpy scikit-learn plotly matplotlib seaborn joblib
-
-# Verify installation
-pip list
+pip install -r requirements.txt
 ```
 
 #### 5. Run Application
 
 ```bash
-# English version - shows clickable localhost URL
 streamlit run app.py
-
-# Malay version (Bahasa Malaysia) - shows clickable localhost URL
-streamlit run app2.py
 ```
 
 #### 6. Access Application
 
-- Click the displayed URL: **http://localhost:8501**
-- First run generates data and trains models (2-3 minutes)
-- Navigate using the dropdown menu in the sidebar
+- Open the displayed URL: **http://localhost:8501**
+- On first run, data is generated and models are trained (2-3 minutes)
+- Use the sidebar to navigate between dashboard pages
 - **Language Options:**
-  - **app.py**: English interface
-  - **app2.py**: Malay (Bahasa Malaysia) interface
+  - Use the **Language** selector in the sidebar to switch between English and Malay (Bahasa Malaysia)
 
 #### 7. For VM/Network Hosting (Optional)
 
 ```bash
-# English version - to allow access from other machines
 streamlit run app.py --server.address 0.0.0.0
-
-# Malay version - to allow access from other machines
-streamlit run app2.py --server.address 0.0.0.0
 ```
 
 - Access from other machines: **http://[YOUR-IP]:8501**
@@ -111,9 +93,8 @@ streamlit run app2.py --server.address 0.0.0.0
 ## 📁 Project Structure
 
 ```
-malaysia-prison-forecasting/
-├── app.py                      # Main Streamlit application (English)
-├── app2.py                     # Main Streamlit application (Malay)
+PrisonPredictAI/
+├── app.py                      # Main Streamlit application (English & Malay)
 ├── modules/                    # Forecasting modules
 │   ├── __init__.py
 │   ├── population_forecast.py  # Population prediction module
@@ -129,17 +110,17 @@ malaysia-prison-forecasting/
 │   └── feature_importance.pkl  # Feature importance data
 ├── utils/                      # Utility functions
 │   ├── __init__.py
-│   ├── data_utils.py          # Data generation and management
-│   └── visualization.py       # Chart and plot functions
+│   ├── data_utils.py           # Data generation and management
+│   └── visualization.py        # Chart and plot functions
 ├── data/                       # Generated datasets (auto-created)
-│   ├── population_data.csv    # Prison population data
-│   ├── staffing_data.csv      # Staffing information
-│   └── resource_data.csv      # Resource and cost data
+│   ├── population_data.csv     # Prison population data
+│   ├── staffing_data.csv       # Staffing information
+│   └── resource_data.csv       # Resource and cost data
 ├── .streamlit/                 # Streamlit configuration
-│   └── config.toml            # Server and UI settings
-├── dependencies.txt           # Python dependencies list
-├── .gitignore                 # Git ignore rules
-└── README.md                  # This file
+│   └── config.toml             # Server and UI settings
+├── requirements.txt            # Python dependencies list
+├── .gitignore                  # Git ignore rules
+└── README.md                   # This file
 ```
 
 ## 🔧 System Capabilities
@@ -252,15 +233,11 @@ gatherUsageStats = false
 # Activate environment
 venv\Scripts\activate
 
-# Run English version (local access)
+# Run the application (local access)
 streamlit run app.py
 
-# Run Malay version (local access)
-streamlit run app2.py
-
 # Run with network access for VM hosting
-streamlit run app.py --server.address 0.0.0.0   # English
-streamlit run app2.py --server.address 0.0.0.0  # Malay
+streamlit run app.py --server.address 0.0.0.0
 ```
 
 ### Model Retraining
