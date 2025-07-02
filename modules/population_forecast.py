@@ -120,6 +120,11 @@ def show_population_forecast(data, models):
             if current_population > 0
             else 0
         )
+        female_percentage = (
+            (display_data["female_prisoners"].iloc[-1] / current_population * 100)
+            if current_population > 0
+            else 0
+        )
     elif (
         forecast_level == "By Prison"
         and selected_prison
@@ -138,18 +143,30 @@ def show_population_forecast(data, models):
             if current_population > 0
             else 0
         )
+        female_percentage = (
+            (display_data["female_prisoners"].iloc[-1] / current_population * 100)
+            if current_population > 0
+            else 0
+        )
     else:
         current_population = population_data["total_prisoners"].iloc[-1]
         growth_rate = calculate_growth_rate(population_data, "total_prisoners", 12)
         male_percentage = (
             population_data["male_prisoners"].iloc[-1] / current_population
         ) * 100
+        female_percentage = (
+            population_data["female_prisoners"].iloc[-1] / current_population
+        ) * 100
     avg_sentence = population_data["avg_sentence_months"].iloc[-1]
 
     col1.metric("Current Population", f"{current_population:,.0f}")
     col2.metric("Annual Growth Rate", f"{growth_rate:.1f}%" if growth_rate else "N/A")
-    col3.metric("Male Population", f"{male_percentage:.1f}%")
-    col4.metric("Avg Sentence", f"{avg_sentence:.1f} months")
+    if male_percentage is not None:
+        col3.metric("Male Population", f"{male_percentage:.1f}%")
+    if female_percentage is not None:
+        col4.metric("Female Population", f"{female_percentage:.1f}%")
+    else:
+        col4.metric("Avg Sentence", f"{avg_sentence:.1f} months")
 
     # Main content tabs
     tab1, tab2, tab3, tab4 = st.tabs(

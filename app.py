@@ -125,6 +125,22 @@ st.set_page_config(
 )
 
 
+# Add custom CSS for mobile-friendly layout
+st.markdown(
+    """
+    <style>
+    .block-container { padding: 0.5rem 0.5rem; }
+    .stMetric { font-size: 1.1rem; }
+    @media (max-width: 600px) {
+        .stMetric { font-size: 0.95rem; }
+        .element-container { padding-left: 0.2rem !important; padding-right: 0.2rem !important; }
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
+
 def main():
     # Language selection
     lang = st.sidebar.selectbox(
@@ -206,11 +222,23 @@ def show_dashboard_overview(data, models, l):
                 selected_prison = l["all_prisons"]
         st.markdown("---")
 
-    # Key metrics
+    # Key metrics (mobile-friendly: use 2 columns)
     col1, col2, col3, col4 = st.columns(4)
     if "population_data" in data:
         current_population = data["population_data"]["total_prisoners"].iloc[-1]
         col1.metric(l["current_population"], f"{current_population:,.0f}")
+        # Calculate male and female percentages if columns exist
+        if (
+            "male_prisoners" in data["population_data"].columns
+            and "female_prisoners" in data["population_data"].columns
+        ):
+            latest_row = data["population_data"].iloc[-1]
+            total = latest_row["male_prisoners"] + latest_row["female_prisoners"]
+            if total > 0:
+                male_pct = 100 * latest_row["male_prisoners"] / total
+                female_pct = 100 * latest_row["female_prisoners"] / total
+                col3.metric(l["male_prisoners"], f"{male_pct:.1f}%")
+                col4.metric(l["female_prisoners"], f"{female_pct:.1f}%")
     if "resource_data" in data:
         daily_cost = data["resource_data"]["daily_cost_per_prisoner"].iloc[-1]
         col2.metric(
@@ -221,12 +249,18 @@ def show_dashboard_overview(data, models, l):
                 else f"RM {daily_cost:.2f}"
             ),
         )
-    if "resource_data" in data:
+    if (
+        "resource_data" in data
+        and "capacity_utilization" in data["resource_data"].columns
+    ):
         capacity_utilization = data["resource_data"]["capacity_utilization"].iloc[-1]
-        col3.metric(l["capacity_utilization"], f"{capacity_utilization:.1f}%")
-    if "population_data" in data:
+        st.metric(l["capacity_utilization"], f"{capacity_utilization:.1f}%")
+    if (
+        "population_data" in data
+        and "avg_sentence_months" in data["population_data"].columns
+    ):
         avg_sentence = data["population_data"]["avg_sentence_months"].iloc[-1]
-        col4.metric(l["avg_sentence"], f"{avg_sentence:.1f} {l['months']}")
+        st.metric(l["avg_sentence"], f"{avg_sentence:.1f} {l['months']}")
     st.markdown("---")
 
     # State/Prison specific data display
@@ -308,67 +342,58 @@ def show_dashboard_overview(data, models, l):
     if data:
         plot_overview_metrics(data)
 
-    # System information
+    # System information (mobile-friendly: stack vertically)
     st.markdown("---")
     st.subheader(l["system_info"])
-    info_col1, info_col2 = st.columns(2)
-    with info_col1:
-        st.info(l["data_coverage"])
-    with info_col2:
-        if models:
-            st.success(l["models_loaded"])
-        else:
-            st.error(l["models_not_available"])
+    st.info(l["data_coverage"])
+    if models:
+        st.success(l["models_loaded"])
+    else:
+        st.error(l["models_not_available"])
 
-    # Quick actions
+    # Quick actions (mobile-friendly: stack vertically)
     st.markdown("---")
     st.subheader(l["quick_actions"])
-    action_col1, action_col2, action_col3 = st.columns(3)
-    with action_col1:
-        if st.button(l["generate_forecast"]):
-            st.info(
-                "Navigate to specific forecast pages to generate predictions"
-                if l["generate_forecast"].startswith("Generate")
-                else "Navigasi ke halaman ramalan khusus untuk menjana prediksi"
+    if st.button(l["generate_forecast"]):
+        st.info(
+            "Navigate to specific forecast pages to generate predictions"
+            if l["generate_forecast"].startswith("Generate")
+            else "Navigasi ke halaman ramalan khusus untuk menjana prediksi"
+        )
+    if st.button(l["export_data"]):
+        if data:
+            st.download_button(
+                label=l["download_population_data"],
+                data=data["population_data"].to_csv(index=False),
+                file_name=(
+                    f"prison_population_data_{datetime.now().strftime('%Y%m%d')}.csv"
+                    if l["download_population_data"].startswith("Download")
+                    else f"data_populasi_penjara_{datetime.now().strftime('%Y%m%d')}.csv"
+                ),
+                mime="text/csv",
             )
-    with action_col2:
-        if st.button(l["export_data"]):
-            if data:
-                st.download_button(
-                    label=l["download_population_data"],
-                    data=data["population_data"].to_csv(index=False),
-                    file_name=(
-                        f"prison_population_data_{datetime.now().strftime('%Y%m%d')}.csv"
-                        if l["download_population_data"].startswith("Download")
-                        else f"data_populasi_penjara_{datetime.now().strftime('%Y%m%d')}.csv"
-                    ),
-                    mime="text/csv",
-                )
-    with action_col3:
-        if st.button("Export State/Prison Detail Data"):
-            if data:
-                # Filter by current state/prison selection if not 'All States'
-                detail_df = data["prison_detail_data"]
+    if st.button("Export State/Prison Detail Data"):
+        if data:
+            # Filter by current state/prison selection if not 'All States'
+            detail_df = data["prison_detail_data"]
+            if (
+                "selected_state" in locals()
+                and selected_state != l["all_states"]
+                and selected_state in detail_df["state"].unique()
+            ):
+                detail_df = detail_df[detail_df["state"] == selected_state]
                 if (
-                    "selected_state" in locals()
-                    and selected_state != l["all_states"]
-                    and selected_state in detail_df["state"].unique()
+                    "selected_prison" in locals()
+                    and selected_prison != l["all_prisons_in_state"]
+                    and selected_prison in detail_df["prison_name"].unique()
                 ):
-                    detail_df = detail_df[detail_df["state"] == selected_state]
-                    if (
-                        "selected_prison" in locals()
-                        and selected_prison != l["all_prisons_in_state"]
-                        and selected_prison in detail_df["prison_name"].unique()
-                    ):
-                        detail_df = detail_df[
-                            detail_df["prison_name"] == selected_prison
-                        ]
-                st.download_button(
-                    label="Download State/Prison Detail Data",
-                    data=detail_df.to_csv(index=False),
-                    file_name=f"prison_detail_data_{datetime.now().strftime('%Y%m%d')}.csv",
-                    mime="text/csv",
-                )
+                    detail_df = detail_df[detail_df["prison_name"] == selected_prison]
+            st.download_button(
+                label="Download State/Prison Detail Data",
+                data=detail_df.to_csv(index=False),
+                file_name=f"prison_detail_data_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv",
+            )
 
     # System information
     st.markdown("---")
