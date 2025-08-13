@@ -9,6 +9,7 @@ COPY data ./data
 COPY models ./models
 COPY modules ./modules
 COPY utils ./utils
+COPY assets ./assets
 COPY app.py ./app.py
 
 # Copy requirements files
