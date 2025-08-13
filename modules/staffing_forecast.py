@@ -302,7 +302,7 @@ def plot_staffing_forecast_chart(historical_data, forecast_data, forecast_dates)
         fig.update_yaxes(title_text="Number of Staff", row=1, col=1)
         fig.update_yaxes(title_text="Staff-to-Prisoner Ratio", row=2, col=1)
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="staffing_forecast_chart")
         
     except Exception as e:
         st.error(f"Error creating staffing forecast chart: {e}")
@@ -353,7 +353,7 @@ def create_staff_category_trends(staffing_data):
             hovermode='x unified'
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="staff_category_trends_chart")
         
     except Exception as e:
         st.error(f"Error creating staff category trends: {e}")
@@ -382,7 +382,7 @@ def create_shift_analysis(staffing_data):
             annotations=[dict(text='Shifts', x=0.5, y=0.5, font_size=20, showarrow=False)]
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="staffing_efficiency_chart")
         
         # Shift trends over time
         fig2 = go.Figure()
@@ -418,7 +418,7 @@ def create_shift_analysis(staffing_data):
             hovermode='x unified'
         )
         
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, use_container_width=True, key="staffing_comparison_chart")
         
     except Exception as e:
         st.error(f"Error creating shift analysis: {e}")
@@ -457,7 +457,7 @@ def create_overtime_analysis(staffing_data):
                 yaxis_title='Hours per Staff per Month'
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, key="staff_distribution_chart")
         
         with col2:
             # Overtime statistics
@@ -522,7 +522,7 @@ def create_availability_analysis(staffing_data):
         fig.update_yaxes(title_text="Percentage (%)", row=1, col=1)
         fig.update_yaxes(title_text="Percentage (%)", row=1, col=2)
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="workload_analysis_chart")
         
         # Availability metrics
         col1, col2, col3 = st.columns(3)
@@ -572,7 +572,7 @@ def create_workload_analysis(staffing_data, population_data):
             yaxis_title='Prisoners per Available Staff'
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="staff_performance_chart")
         
         # Workload statistics
         current_workload = merged_data['prisoners_per_staff'].iloc[-1]

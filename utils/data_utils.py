@@ -69,45 +69,71 @@ def generate_synthetic_data():
         data = {}
         
         # Generate population data based on Malaysian prison statistics
-        dates = pd.date_range(start='2019-01-01', periods=84, freq='ME')
+        # 5 years of data = 60 months
+        dates = pd.date_range(start='2020-01-01', periods=60, freq='ME')
         
         # Population data - Based on Malaysian Prison Department statistics
-        # Malaysia has approximately 70,000-75,000 prisoners with slight upward trend
-        base_population = 72500  # More realistic baseline
+        # Malaysia has approximately 50,000-55,000 prisoners (more realistic current figure)
+        base_population = 52000  # More realistic baseline for current Malaysian prison population
         
-        # Gradual increase due to population growth and crime trends
-        trend = np.linspace(0, 3500, 84)  # More conservative growth
+        # Gradual increase due to population growth and crime trends over 5 years
+        trend = np.linspace(0, 3000, 60)  # Conservative 5-year growth to ~55k
         
         # Seasonal variation (holidays, court schedules affect admissions)
-        seasonal = 1200 * np.sin(2 * np.pi * np.arange(84) / 12)
+        # More pronounced seasonal effects for Malaysian context
+        seasonal = 1800 * np.sin(2 * np.pi * np.arange(60) / 12)
+        
+        # Additional seasonal factors for Malaysian context
+        # Ramadan/Hari Raya effects (month 4-5, 9-10)
+        ramadan_effect = np.zeros(60)
+        for i in range(60):
+            month = (i % 12) + 1
+            if month in [4, 5, 9, 10]:  # Ramadan/festive seasons
+                ramadan_effect[i] = -300  # Lower crime during religious periods
+        
+        # Chinese New Year effect (month 1-2)
+        cny_effect = np.zeros(60)
+        for i in range(60):
+            month = (i % 12) + 1
+            if month in [1, 2]:
+                cny_effect[i] = -150  # Lower activity during CNY
+        
+        # Monsoon season effect (month 11-1) - higher indoor crimes
+        monsoon_effect = np.zeros(60)
+        for i in range(60):
+            month = (i % 12) + 1
+            if month in [11, 12, 1]:
+                monsoon_effect[i] = 200  # Slightly higher crimes during monsoon
         
         # Random variation with lower volatility for government data
-        noise = np.random.normal(0, 600, 84)
+        noise = np.random.normal(0, 450, 60)
         
-        total_prisoners = base_population + trend + seasonal + noise
-        total_prisoners = np.maximum(total_prisoners, 68000)  # Realistic minimum
+        total_prisoners = base_population + trend + seasonal + ramadan_effect + cny_effect + monsoon_effect + noise
+        total_prisoners = np.maximum(total_prisoners, 48000)  # Realistic minimum
         
         # Realistic demographic breakdowns based on Malaysian statistics
         # Male ratio is higher in Malaysian prisons (typically 92-95%)
-        male_ratio = np.random.normal(0.93, 0.01, 84)
+        male_ratio = np.random.normal(0.935, 0.008, 60)  # More stable ratio
         male_prisoners = (total_prisoners * male_ratio).astype(int)
         female_prisoners = total_prisoners.astype(int) - male_prisoners
         
-        # Age groups - Malaysian prison demographics
+        # Age groups - Malaysian prison demographics with more realistic distribution
         # Young (18-30), Middle (31-50), Old (50+)
-        young_ratio = np.random.normal(0.45, 0.02, 84)  # Higher youth incarceration
-        middle_ratio = np.random.normal(0.42, 0.02, 84)
+        young_ratio = np.random.normal(0.48, 0.015, 60)  # Higher youth incarceration in Malaysia
+        middle_ratio = np.random.normal(0.40, 0.015, 60)
         old_ratio = 1 - young_ratio - middle_ratio
+        old_ratio = np.maximum(old_ratio, 0.08)  # Ensure minimum elderly population
         
         young_prisoners = (total_prisoners * young_ratio).astype(int)
         middle_prisoners = (total_prisoners * middle_ratio).astype(int)
         old_prisoners = total_prisoners.astype(int) - young_prisoners - middle_prisoners
         
-        # Crime types - Malaysian crime pattern (drug crimes are dominant)
-        drug_crimes_ratio = np.random.normal(0.55, 0.03, 84)  # Very high drug crimes
-        violent_crimes_ratio = np.random.normal(0.18, 0.02, 84)
-        property_crimes_ratio = np.random.normal(0.15, 0.02, 84)
+        # Crime types - Malaysian crime pattern (drug crimes are dominant due to strict laws)
+        drug_crimes_ratio = np.random.normal(0.58, 0.025, 60)  # Very high drug crimes in Malaysia
+        violent_crimes_ratio = np.random.normal(0.16, 0.015, 60)  # Lower violent crime
+        property_crimes_ratio = np.random.normal(0.14, 0.015, 60)  # Property crimes
         other_crimes_ratio = 1 - drug_crimes_ratio - violent_crimes_ratio - property_crimes_ratio
+        other_crimes_ratio = np.maximum(other_crimes_ratio, 0.08)  # Ensure minimum other crimes
         
         drug_crimes = (total_prisoners * drug_crimes_ratio).astype(int)
         violent_crimes = (total_prisoners * violent_crimes_ratio).astype(int)
@@ -115,27 +141,39 @@ def generate_synthetic_data():
         other_crimes = total_prisoners.astype(int) - drug_crimes - violent_crimes - property_crimes
         
         # Sentence lengths and flow - Malaysian judicial patterns
-        avg_sentence_months = np.random.normal(28, 8, 84)  # Shorter average sentences
-        avg_sentence_months = np.maximum(avg_sentence_months, 6)
+        # Malaysia has longer average sentences due to drug laws
+        avg_sentence_months = np.random.normal(32, 6, 60)  # Longer average sentences for drug crimes
+        avg_sentence_months = np.maximum(avg_sentence_months, 8)
         
         # Monthly flow rates based on Malaysian court processing
-        monthly_releases = np.random.poisson(2400, 84)  # Lower turnover
-        monthly_admissions = np.random.poisson(2450, 84)  # Slight net increase
+        # Lower turnover due to longer sentences and court backlogs
+        monthly_releases = np.random.poisson(2200, 60)  # Lower release rate
+        monthly_admissions = np.random.poisson(2280, 60)  # Slight net increase matching trend
         
-        # Realistic state distribution based on actual Malaysian prison capacity
+        # Add COVID-19 impact for 2020-2021 period
+        for i in range(60):
+            date_current = dates[i]
+            if date_current.year == 2020 and date_current.month >= 3:  # MCO period
+                monthly_admissions[i] = int(monthly_admissions[i] * 0.7)  # Reduced court operations
+                monthly_releases[i] = int(monthly_releases[i] * 0.8)  # Reduced releases due to health protocols
+            elif date_current.year == 2021:  # Recovery period
+                monthly_admissions[i] = int(monthly_admissions[i] * 0.85)  # Gradual recovery
+                monthly_releases[i] = int(monthly_releases[i] * 0.9)
+        
+        # Realistic state distribution based on actual Malaysian prison capacity and crime statistics
         state_populations = {
-            'Selangor': 0.32,    # Largest - Sungai Buloh complex (12,000+ capacity)
-            'Sarawak': 0.16,     # Large state, rural crime, drug trafficking
-            'Johor': 0.14,       # High crime rate, Singapore border issues
-            'Sabah': 0.11,       # Large state, border security issues
-            'Perak': 0.09,       # Kamunting Detention Centre, historic prisons
-            'Kedah': 0.06,       # Medium population state
-            'Pahang': 0.04,      # Large but sparse population
-            'Penang': 0.03,      # Urban crime, smaller capacity
-            'Melaka': 0.02,      # Historic, tourist area
-            'Negeri Sembilan': 0.02,  # Smaller industrial state
-            'Kelantan': 0.005,   # Conservative state, lower crime
-            'Terengganu': 0.005  # Oil state, lower urban crime
+            'Selangor': 0.28,    # Largest - Sungai Buloh complex, high urban crime
+            'Sarawak': 0.18,     # Large state, drug trafficking routes, rural crime
+            'Johor': 0.16,       # High crime rate, Singapore border, drug trafficking
+            'Sabah': 0.12,       # Large state, border security issues, immigrant crime
+            'Perak': 0.08,       # Kamunting Detention Centre, historic prisons
+            'Kedah': 0.06,       # Northern border, drug trafficking routes
+            'Pahang': 0.05,      # Large but sparse population, drug cultivation
+            'Penang': 0.03,      # Urban crime, drug hub
+            'Melaka': 0.02,      # Historic, tourist area, smaller population
+            'Negeri Sembilan': 0.015, # Smaller industrial state
+            'Kelantan': 0.005,   # Conservative state, lower crime, religious influence
+            'Terengganu': 0.005  # Oil state, lower urban crime, religious influence
         }
         
         # Generate state-level and prison-level data
@@ -231,30 +269,37 @@ def generate_synthetic_data():
             'monthly_admissions': monthly_admissions
         })
         
-        # Staffing data
-        base_ratio = 0.28
-        ratio_variation = np.random.normal(0, 0.02, 84)
+        # Staffing data - More realistic Malaysian prison staffing
+        # Malaysian prisons typically understaffed
+        base_ratio = 0.26  # Lower staff-to-prisoner ratio (understaffing issue)
+        ratio_variation = np.random.normal(0, 0.015, 60)
         staff_ratio = base_ratio + ratio_variation
+        staff_ratio = np.maximum(staff_ratio, 0.22)  # Minimum staffing level
         
         total_staff = (total_prisoners * staff_ratio).astype(int)
         
-        security_staff_ratio = np.random.normal(0.65, 0.03, 84)
-        admin_staff_ratio = np.random.normal(0.15, 0.02, 84)
-        medical_staff_ratio = np.random.normal(0.08, 0.01, 84)
+        # Staff distribution reflecting Malaysian prison structure
+        security_staff_ratio = np.random.normal(0.68, 0.02, 60)  # Higher security needs
+        admin_staff_ratio = np.random.normal(0.14, 0.015, 60)   # Efficient admin
+        medical_staff_ratio = np.random.normal(0.07, 0.01, 60)  # Limited medical staff
         other_staff_ratio = 1 - security_staff_ratio - admin_staff_ratio - medical_staff_ratio
+        other_staff_ratio = np.maximum(other_staff_ratio, 0.08)  # Ensure minimum other staff
         
         security_staff = (total_staff * security_staff_ratio).astype(int)
         admin_staff = (total_staff * admin_staff_ratio).astype(int)
         medical_staff = (total_staff * medical_staff_ratio).astype(int)
         other_staff = total_staff - security_staff - admin_staff - medical_staff
         
-        overtime_hours = np.random.normal(120, 20, 84)
-        overtime_hours = np.maximum(overtime_hours, 60)
+        # Higher overtime due to understaffing
+        overtime_hours = np.random.normal(140, 25, 60)
+        overtime_hours = np.maximum(overtime_hours, 80)
         
-        sick_leave_rate = np.random.normal(0.08, 0.02, 84)
-        vacation_rate = np.random.normal(0.12, 0.02, 84)
+        # Malaysian context - higher sick leave in tropical climate
+        sick_leave_rate = np.random.normal(0.09, 0.02, 60)
+        vacation_rate = np.random.normal(0.11, 0.015, 60)
         
         available_staff = total_staff * (1 - sick_leave_rate - vacation_rate)
+        available_staff = np.maximum(available_staff, total_staff * 0.75)  # Minimum 75% availability
         
         staffing_data = pd.DataFrame({
             'date': dates,
@@ -271,30 +316,56 @@ def generate_synthetic_data():
         })
         
         # Resource data - Malaysian prison system capacity and costs
-        total_capacity = 95000  # Current Malaysian prison system capacity
+        total_capacity = 65000  # Realistic Malaysian prison system capacity (2024)
         capacity_utilization = (total_prisoners / total_capacity) * 100
         
-        # More realistic Malaysian prison costs (lower than developed countries)
-        base_daily_cost = 35  # RM 35 per prisoner per day (realistic for Malaysia)
-        daily_cost_variation = np.random.normal(0, 2, 84)
-        daily_cost_per_prisoner = base_daily_cost + daily_cost_variation
+        # More realistic Malaysian prison costs reflecting local economy
+        base_daily_cost = 15  # RM 15 per prisoner per day (more realistic for Malaysian context)
         
-        # Cost breakdown reflecting Malaysian operations
-        monthly_food_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.45  # Higher food ratio
-        monthly_medical_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.12  # Lower medical costs
-        monthly_utility_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.23  # Higher utility costs (tropical climate)
-        monthly_other_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.20  # Administrative and security
+        # Add inflation impact over 5 years (average 2.5% annually)
+        inflation_factor = np.zeros(60)
+        for i in range(60):
+            years_elapsed = i / 12.0
+            inflation_factor[i] = (1 + 0.025) ** years_elapsed
+        
+        daily_cost_variation = np.random.normal(0, 0.8, 60)  # Reduced variation
+        daily_cost_per_prisoner = (base_daily_cost * inflation_factor) + daily_cost_variation
+        daily_cost_per_prisoner = np.maximum(daily_cost_per_prisoner, 12)  # Minimum RM 12/day
+        
+        # Cost breakdown reflecting Malaysian operations and climate
+        monthly_food_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.45  # Food costs (largest component)
+        monthly_medical_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.12  # Medical costs
+        monthly_utility_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.28  # Utilities (tropical climate, AC)
+        monthly_other_cost = total_prisoners * daily_cost_per_prisoner * 30 * 0.15  # Admin, security, maintenance
         
         total_monthly_cost = monthly_food_cost + monthly_medical_cost + monthly_utility_cost + monthly_other_cost
         
-        maintenance_cost = np.random.normal(500000, 100000, 84)
-        maintenance_cost = np.maximum(maintenance_cost, 200000)
+        # Maintenance costs with seasonal variations (monsoon damage)
+        base_maintenance = 480000
+        seasonal_maintenance = np.zeros(60)
+        for i in range(60):
+            month = (i % 12) + 1
+            if month in [11, 12, 1, 2]:  # Monsoon season higher maintenance
+                seasonal_maintenance[i] = 150000
+            elif month in [3, 4]:  # Post-monsoon repairs
+                seasonal_maintenance[i] = 100000
+            else:
+                seasonal_maintenance[i] = 0
         
-        food_waste_rate = np.random.normal(0.12, 0.03, 84)
-        energy_efficiency = np.random.normal(0.75, 0.05, 84)
+        maintenance_cost = np.random.normal(base_maintenance, 80000, 60) + seasonal_maintenance
+        maintenance_cost = np.maximum(maintenance_cost, 300000)
         
-        medical_supplies_cost = total_prisoners * np.random.normal(8, 1, 84)
-        security_equipment_cost = np.random.normal(150000, 30000, 84)
+        # Malaysian context adjustments
+        food_waste_rate = np.random.normal(0.10, 0.025, 60)  # Better food management
+        energy_efficiency = np.random.normal(0.72, 0.04, 60)  # Tropical climate challenges
+        
+        # Medical supplies reflecting tropical diseases and healthcare needs
+        medical_supplies_cost = total_prisoners * np.random.normal(9.5, 1.2, 60)  # Higher medical needs
+        
+        # Security equipment costs with technology upgrades over time
+        base_security_cost = 120000
+        tech_upgrade_factor = np.linspace(1.0, 1.4, 60)  # Gradual tech improvements
+        security_equipment_cost = np.random.normal(base_security_cost, 25000, 60) * tech_upgrade_factor
         
         resource_data = pd.DataFrame({
             'date': dates,
@@ -356,31 +427,37 @@ def load_models():
     """
     Load trained models if available
     """
-    models_dir = 'models'
-    models = {}
+    import warnings
     
-    try:
-        if os.path.exists(models_dir):
-            for model_type in ['population', 'staffing', 'resource']:
-                model_path = os.path.join(models_dir, f'{model_type}_model.pkl')
-                if os.path.exists(model_path):
-                    models[model_type] = joblib.load(model_path)
-            
-            # Load metrics if available
-            metrics_path = os.path.join(models_dir, 'model_metrics.pkl')
-            if os.path.exists(metrics_path):
-                models['metrics'] = joblib.load(metrics_path)
+    # Suppress scikit-learn version warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+        
+        models_dir = 'models'
+        models = {}
+        
+        try:
+            if os.path.exists(models_dir):
+                for model_type in ['population', 'staffing', 'resource']:
+                    model_path = os.path.join(models_dir, f'{model_type}_model.pkl')
+                    if os.path.exists(model_path):
+                        models[model_type] = joblib.load(model_path)
                 
-            # Load feature importance if available
-            importance_path = os.path.join(models_dir, 'feature_importance.pkl')
-            if os.path.exists(importance_path):
-                models['feature_importance'] = joblib.load(importance_path)
-        
-        return models if models else None
-        
-    except Exception as e:
-        print(f"Error loading models: {e}")
-        return None
+                # Load metrics if available
+                metrics_path = os.path.join(models_dir, 'model_metrics.pkl')
+                if os.path.exists(metrics_path):
+                    models['metrics'] = joblib.load(metrics_path)
+                    
+                # Load feature importance if available
+                importance_path = os.path.join(models_dir, 'feature_importance.pkl')
+                if os.path.exists(importance_path):
+                    models['feature_importance'] = joblib.load(importance_path)
+            
+            return models if models else None
+            
+        except Exception as e:
+            print(f"Error loading models: {e}")
+            return None
 
 def get_latest_data_point(data, metric):
     """
