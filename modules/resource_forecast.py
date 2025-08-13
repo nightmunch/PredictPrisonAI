@@ -6,39 +6,39 @@ from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 
 
-def show_resource_forecast(data, models):
+def show_resource_forecast(data, models, l):
     """
     Display resource forecasting page with proper state/prison filtering
     """
-    st.title("💰 Resource Forecast")
+    st.title(l["resource_forecast_header"])
 
     # Sidebar parameters
-    st.sidebar.header("Resource Parameters")
+    st.sidebar.header(l["forecast_parameters"])
 
     # Forecast level selection
     forecast_level = st.sidebar.selectbox(
-        "Resource Forecast Level", ["Malaysia Overall", "By State", "By Prison"]
+        l["forecast_level"], [l["overall_malaysia"], l["by_state"], l["by_prison"]]
     )
 
     selected_state = None
     selected_prison = None
 
-    if forecast_level in ["By State", "By Prison"]:
+    if forecast_level in [l["by_state"], l["by_prison"]]:
         available_states = sorted(data["prison_detail_data"]["state"].unique())
-        selected_state = st.sidebar.selectbox("Select State:", available_states)
+        selected_state = st.sidebar.selectbox(l["select_state"], available_states)
 
-        if forecast_level == "By Prison" and selected_state:
+        if forecast_level == l["by_prison"] and selected_state:
             prisons_in_state = data["prison_detail_data"][
                 data["prison_detail_data"]["state"] == selected_state
             ]["prison_name"].unique()
             selected_prison = st.sidebar.selectbox(
-                "Select Prison:", sorted(prisons_in_state)
+                l["select_prison"], sorted(prisons_in_state)
             )
 
     # Other parameters
-    forecast_months = st.sidebar.slider("Forecast Period (months)", 6, 36, 24)
-    cost_adjustment = st.sidebar.slider("Cost Inflation Rate (%/year)", -10, 20, 3)
-    efficiency_target = st.sidebar.slider("Efficiency Improvement Target (%)", 0, 25, 5)
+    forecast_months = st.sidebar.slider(l["forecast_period"], 6, 36, 24)
+    cost_adjustment = st.sidebar.slider(l["cost_inflation_rate"], -10, 20, 3)
+    efficiency_target = st.sidebar.slider(l["efficiency_improvement_target"], 0, 25, 5)
 
     # Get base data
     resource_data = data["resource_data"]
@@ -55,11 +55,11 @@ def show_resource_forecast(data, models):
     )
 
     # Display header with filtered title
-    st.header(f"💰 Resource Forecast{title_suffix}")
+    st.header(f"{l['resource_forecast_header']}{title_suffix}")
 
     # Show population ratio info
     if population_ratio < 1.0:
-        st.info(f"📊 Showing data for {population_ratio:.1%} of national population")
+        st.info(l["showing_data_for"].format(population_ratio))
 
     # Display current metrics with filtered data
     display_current_metrics(filtered_resource_data, resource_data)
@@ -67,10 +67,10 @@ def show_resource_forecast(data, models):
     # Main content tabs
     tab1, tab2, tab3, tab4 = st.tabs(
         [
-            "📈 Cost Forecast",
-            "🏗️ Capacity Planning",
-            "⚡ Efficiency Analysis",
-            "📊 Resource Optimization",
+            l["cost_forecast_tab"],
+            l["capacity_planning_tab"],
+            l["efficiency_analysis_tab"],
+            l["resource_optimization_tab"],
         ]
     )
 
@@ -83,19 +83,20 @@ def show_resource_forecast(data, models):
             efficiency_target,
             title_suffix,
             population_ratio,
+            l,
         )
 
     with tab2:
         show_capacity_planning_tab(
-            filtered_resource_data, population_data, title_suffix
+            filtered_resource_data, population_data, title_suffix, l
         )
 
     with tab3:
-        show_efficiency_analysis_tab(filtered_resource_data, title_suffix)
+        show_efficiency_analysis_tab(filtered_resource_data, title_suffix, l)
 
     with tab4:
         show_resource_optimization_tab(
-            filtered_resource_data, population_data, title_suffix
+            filtered_resource_data, population_data, title_suffix, l
         )
 
 
@@ -212,11 +213,12 @@ def show_cost_forecast_tab(
     efficiency_target,
     title_suffix,
     population_ratio=1.0,
+    l=None,
 ):
     """
     Show cost forecast tab with filtered data
     """
-    st.subheader(f"Cost Forecast and Budget Planning{title_suffix}")
+    st.subheader(f"{l['cost_forecast_planning']}{title_suffix}")
 
     # Generate forecast using filtered data
     forecast_data, forecast_dates = generate_filtered_resource_forecast(
@@ -235,10 +237,10 @@ def show_cost_forecast_tab(
         )
 
         # Show cost projections
-        show_cost_projections(filtered_resource_data, forecast_data)
+        show_cost_projections(filtered_resource_data, forecast_data, l)
 
         # Show cost breakdown
-        show_cost_breakdown(forecast_data, forecast_dates)
+        show_cost_breakdown(forecast_data, forecast_dates, l)
 
 
 def generate_filtered_resource_forecast(
@@ -474,17 +476,17 @@ def create_cost_forecast_chart(historical_data, forecast_data, forecast_dates):
         fig.update_yaxes(title_text="Utilization %", row=2, col=1)
         fig.update_yaxes(title_text="Efficiency %", row=2, col=2)
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="resource_analysis_chart")
 
     except Exception as e:
         st.error(f"Error creating chart: {e}")
 
 
-def show_cost_projections(resource_data, forecast_data):
+def show_cost_projections(resource_data, forecast_data, l):
     """
     Show cost projection summary
     """
-    st.subheader("Cost Projections")
+    st.subheader(l["cost_projections"])
 
     col1, col2, col3 = st.columns(3)
 
@@ -515,11 +517,11 @@ def show_cost_projections(resource_data, forecast_data):
         )
 
 
-def show_cost_breakdown(forecast_data, forecast_dates):
+def show_cost_breakdown(forecast_data, forecast_dates, l):
     """
     Show cost breakdown over time
     """
-    st.subheader("Cost Breakdown Forecast")
+    st.subheader(l["cost_breakdown_forecast"])
 
     # Create stacked area chart
     fig = go.Figure()
@@ -574,15 +576,15 @@ def show_cost_breakdown(forecast_data, forecast_dates):
         hovermode="x unified",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key="cost_projections_chart")
 
 
-def show_capacity_planning_tab(resource_data, population_data, title_suffix):
+def show_capacity_planning_tab(resource_data, population_data, title_suffix, l):
     """
     Show capacity planning tab
     """
-    st.subheader(f"Capacity Planning and Infrastructure{title_suffix}")
-    st.info("📋 Capacity planning analysis based on filtered data")
+    st.subheader(f"{l['capacity_planning_infrastructure']}{title_suffix}")
+    st.info(l["capacity_planning_analysis"])
 
     # Simple capacity metrics
     col1, col2 = st.columns(2)
@@ -605,12 +607,12 @@ def show_capacity_planning_tab(resource_data, population_data, title_suffix):
             st.success("✅ Good capacity availability")
 
 
-def show_efficiency_analysis_tab(resource_data, title_suffix):
+def show_efficiency_analysis_tab(resource_data, title_suffix, l):
     """
     Show efficiency analysis tab
     """
-    st.subheader(f"Efficiency Analysis and Optimization{title_suffix}")
-    st.info("⚡ Energy and operational efficiency analysis")
+    st.subheader(f"{l['efficiency_analysis_optimization']}{title_suffix}")
+    st.info(l["energy_efficiency_analysis"])
 
     # Simple efficiency metrics
     current_efficiency = resource_data["energy_efficiency"].iloc[-1]
@@ -633,15 +635,15 @@ def show_efficiency_analysis_tab(resource_data, title_suffix):
             st.success("✅ Acceptable food waste levels")
 
 
-def show_resource_optimization_tab(resource_data, population_data, title_suffix):
+def show_resource_optimization_tab(resource_data, population_data, title_suffix, l):
     """
     Show resource optimization tab
     """
-    st.subheader(f"Resource Optimization and Planning{title_suffix}")
-    st.info("📊 Resource optimization recommendations")
+    st.subheader(f"{l['resource_optimization_planning']}{title_suffix}")
+    st.info(l["resource_optimization_recommendations"])
 
     # Simple optimization recommendations
-    st.write("**Optimization Opportunities:**")
+    st.write(l["optimization_opportunities"])
 
     current_cost = resource_data["total_monthly_cost"].iloc[-1]
     cost_per_prisoner = current_cost / population_data["total_prisoners"].iloc[-1]
@@ -666,6 +668,6 @@ def show_resource_optimization_tab(resource_data, population_data, title_suffix)
         st.write(f"• {rec}")
 
     # Cost summary
-    st.write("**Cost Summary:**")
-    st.write(f"• Monthly cost per prisoner: MYR {cost_per_prisoner:.0f}")
-    st.write(f"• Annual cost projection: MYR {current_cost * 12 / 1000000:.1f}M")
+    st.write(l["cost_summary"])
+    st.write(l["monthly_cost_per_prisoner"].format(cost_per_prisoner))
+    st.write(l["annual_cost_projection"].format(current_cost * 12 / 1000000))

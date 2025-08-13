@@ -5,141 +5,351 @@ from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
 
-def plot_overview_metrics(data):
+def plot_overview_metrics(data, chart_key="executive_dashboard_overview", lang=None):
     """
-    Create overview dashboard with key metrics
+    Create professional overview dashboard with enhanced metrics
     """
     try:
-        # Create subplots
+        # Set default language if not provided
+        if lang is None:
+            lang = {
+                "prison_population_by_state": "🗺️ Prison Population by State",
+                "date": "Date",
+                "number_of_prisoners": "Number of Prisoners",
+                "current_staff_distribution": "Current Staff Distribution",
+                "monthly_cost_distribution": "Monthly Cost Distribution (MYR)"
+            }
+        
+        # Professional color scheme
+        colors = {
+            'primary': '#1e3a8a',
+            'secondary': '#3b82f6', 
+            'accent': '#06b6d4',
+            'success': '#10b981',
+            'warning': '#f59e0b',
+            'danger': '#ef4444'
+        }
+        
+        # Create subplots with enhanced styling and translated titles
+        subplot_titles = [
+            '<b>Prison Population Trend</b>' if lang.get('date') == 'Date' else '<b>Trend Populasi Penjara</b>',
+            '<b>Capacity Utilization Analysis</b>' if lang.get('date') == 'Date' else '<b>Analisis Penggunaan Kapasiti</b>',
+            '<b>Staff Deployment Levels</b>' if lang.get('date') == 'Date' else '<b>Tahap Penempatan Kakitangan</b>',
+            '<b>Monthly Operational Costs</b>' if lang.get('date') == 'Date' else '<b>Kos Operasi Bulanan</b>'
+        ]
+        
         fig = make_subplots(
             rows=2, cols=2,
-            subplot_titles=('Prison Population Trend', 'Capacity Utilization', 
-                          'Staff Levels', 'Monthly Costs'),
+            subplot_titles=subplot_titles,
             specs=[[{"secondary_y": False}, {"secondary_y": False}],
-                   [{"secondary_y": False}, {"secondary_y": False}]]
+                   [{"secondary_y": False}, {"secondary_y": False}]],
+            vertical_spacing=0.12,
+            horizontal_spacing=0.08
         )
         
-        # Population trend
+        # Population trend with enhanced styling
         if 'population_data' in data:
             pop_data = data['population_data']
             fig.add_trace(
                 go.Scatter(
                     x=pop_data['date'],
                     y=pop_data['total_prisoners'],
-                    mode='lines',
+                    mode='lines+markers',
                     name='Total Prisoners',
-                    line=dict(color='blue', width=2)
+                    line=dict(color=colors['primary'], width=3, shape='spline'),
+                    marker=dict(size=4, color=colors['primary']),
+                    hovertemplate='<b>Date:</b> %{x}<br><b>Prisoners:</b> %{y:,.0f}<extra></extra>'
+                ),
+                row=1, col=1
+            )
+            
+            # Add trend line
+            x_numeric = np.arange(len(pop_data))
+            z = np.polyfit(x_numeric, pop_data['total_prisoners'], 1)
+            p = np.poly1d(z)
+            fig.add_trace(
+                go.Scatter(
+                    x=pop_data['date'],
+                    y=p(x_numeric),
+                    mode='lines',
+                    name='Trend',
+                    line=dict(color=colors['secondary'], width=2, dash='dot'),
+                    opacity=0.7,
+                    showlegend=False
                 ),
                 row=1, col=1
             )
         
-        # Capacity utilization
+        # Capacity utilization with zones
         if 'resource_data' in data:
             resource_data = data['resource_data']
+            
+            # Add capacity zones background
+            fig.add_hrect(
+                y0=0, y1=70, 
+                fillcolor=colors['success'], opacity=0.1,
+                line_width=0, row=1, col=2
+            )
+            fig.add_hrect(
+                y0=70, y1=85, 
+                fillcolor=colors['warning'], opacity=0.1,
+                line_width=0, row=1, col=2
+            )
+            fig.add_hrect(
+                y0=85, y1=100, 
+                fillcolor=colors['danger'], opacity=0.1,
+                line_width=0, row=1, col=2
+            )
+            
             fig.add_trace(
                 go.Scatter(
                     x=resource_data['date'],
                     y=resource_data['capacity_utilization'],
-                    mode='lines',
+                    mode='lines+markers',
                     name='Capacity %',
-                    line=dict(color='red', width=2)
+                    line=dict(color=colors['accent'], width=3),
+                    marker=dict(size=4, color=colors['accent']),
+                    fill='tonexty',
+                    fillcolor=f'rgba(6, 182, 212, 0.1)',
+                    hovertemplate='<b>Date:</b> %{x}<br><b>Utilization:</b> %{y:.1f}%<extra></extra>'
                 ),
                 row=1, col=2
             )
             
-            # Add 100% capacity line
+            # Add capacity reference lines
             fig.add_hline(
-                y=100, line_dash="dash", line_color="red",
-                annotation_text="Full Capacity",
+                y=100, line_dash="dash", line_color=colors['danger'], line_width=2,
+                annotation_text="Maximum Capacity", annotation_position="top right",
+                row=1, col=2
+            )
+            fig.add_hline(
+                y=85, line_dash="dot", line_color=colors['warning'], line_width=1,
+                annotation_text="Overcrowding Alert", annotation_position="bottom right",
                 row=1, col=2
             )
         
-        # Staff levels
+        # Staff levels with breakdown
         if 'staffing_data' in data:
             staff_data = data['staffing_data']
             fig.add_trace(
                 go.Scatter(
                     x=staff_data['date'],
                     y=staff_data['total_staff'],
-                    mode='lines',
+                    mode='lines+markers',
                     name='Total Staff',
-                    line=dict(color='green', width=2)
+                    line=dict(color=colors['success'], width=3),
+                    marker=dict(size=4, color=colors['success']),
+                    hovertemplate='<b>Date:</b> %{x}<br><b>Staff:</b> %{y:,.0f}<extra></extra>'
+                ),
+                row=2, col=1
+            )
+            
+            # Add available staff overlay
+            fig.add_trace(
+                go.Scatter(
+                    x=staff_data['date'],
+                    y=staff_data['available_staff'],
+                    mode='lines',
+                    name='Available Staff',
+                    line=dict(color=colors['warning'], width=2, dash='dash'),
+                    opacity=0.8,
+                    showlegend=False,
+                    hovertemplate='<b>Available:</b> %{y:,.0f}<extra></extra>'
                 ),
                 row=2, col=1
             )
         
-        # Monthly costs
+        # Monthly costs with trend analysis
         if 'resource_data' in data:
+            cost_millions = resource_data['total_monthly_cost'] / 1000000
             fig.add_trace(
                 go.Scatter(
                     x=resource_data['date'],
-                    y=resource_data['total_monthly_cost'] / 1000000,  # Convert to millions
-                    mode='lines',
+                    y=cost_millions,
+                    mode='lines+markers',
                     name='Cost (Million MYR)',
-                    line=dict(color='purple', width=2)
+                    line=dict(color=colors['primary'], width=3),
+                    marker=dict(size=4, color=colors['primary']),
+                    fill='tonexty',
+                    fillcolor=f'rgba(30, 58, 138, 0.1)',
+                    hovertemplate='<b>Date:</b> %{x}<br><b>Cost:</b> RM %{y:.1f}M<extra></extra>'
                 ),
                 row=2, col=2
             )
+            
+            # Add average cost line
+            avg_cost = cost_millions.mean()
+            fig.add_hline(
+                y=avg_cost, line_dash="dot", line_color=colors['secondary'],
+                annotation_text=f"Average: RM {avg_cost:.1f}M", 
+                annotation_position="top left",
+                row=2, col=2
+            )
         
-        # Update layout
+        # Enhanced layout with professional styling and translated title
+        dashboard_title = "<b>Malaysian Prison System Executive Dashboard</b>" if lang.get('date') == 'Date' else "<b>Papan Pemuka Eksekutif Sistem Penjara Malaysia</b>"
+        
         fig.update_layout(
-            height=600,
+            height=700,
             showlegend=False,
-            title_text="Prison System Overview Dashboard"
+            title=dict(
+                text=dashboard_title,
+                font=dict(size=20, color=colors['primary']),
+                x=0.5,
+                y=0.98
+            ),
+            font=dict(size=12, family="Arial, sans-serif"),
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=80, b=50, l=50, r=50)
         )
         
-        # Update x-axis labels
-        fig.update_xaxes(title_text="Date", row=2, col=1)
-        fig.update_xaxes(title_text="Date", row=2, col=2)
+        # Enhanced subplot titles
+        for i, subplot_title in enumerate(['Prison Population Trend', 'Capacity Utilization Analysis', 
+                                         'Staff Deployment Levels', 'Monthly Operational Costs']):
+            fig.layout.annotations[i].update(
+                font=dict(size=14, color=colors['primary'], family="Arial, sans-serif"),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor=colors['primary'],
+                borderwidth=1
+            )
         
-        # Update y-axis labels
-        fig.update_yaxes(title_text="Number of Prisoners", row=1, col=1)
-        fig.update_yaxes(title_text="Utilization %", row=1, col=2)
-        fig.update_yaxes(title_text="Number of Staff", row=2, col=1)
-        fig.update_yaxes(title_text="Cost (Million MYR)", row=2, col=2)
+        # Professional axis formatting
+        fig.update_xaxes(
+            showgrid=True, gridcolor='rgba(0,0,0,0.1)', gridwidth=1,
+            showline=True, linecolor='rgba(0,0,0,0.3)',
+            title_font=dict(size=12, color=colors['primary'])
+        )
+        fig.update_yaxes(
+            showgrid=True, gridcolor='rgba(0,0,0,0.1)', gridwidth=1,
+            showline=True, linecolor='rgba(0,0,0,0.3)',
+            title_font=dict(size=12, color=colors['primary'])
+        )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # Update axis labels with professional formatting
+        fig.update_xaxes(title_text="<b>Timeline</b>", row=2, col=1)
+        fig.update_xaxes(title_text="<b>Timeline</b>", row=2, col=2)
+        
+        fig.update_yaxes(title_text="<b>Population Count</b>", row=1, col=1)
+        fig.update_yaxes(title_text="<b>Utilization (%)</b>", row=1, col=2)
+        fig.update_yaxes(title_text="<b>Staff Count</b>", row=2, col=1)
+        fig.update_yaxes(title_text="<b>Cost (Million MYR)</b>", row=2, col=2)
+        
+        # Format y-axis with proper number formatting
+        fig.update_yaxes(tickformat=',.0f', row=1, col=1)
+        fig.update_yaxes(tickformat='.1f', row=1, col=2)
+        fig.update_yaxes(tickformat=',.0f', row=2, col=1)
+        fig.update_yaxes(tickformat='.1f', row=2, col=2)
+        
+        st.plotly_chart(fig, use_container_width=True, key=chart_key)
+        
+        # Add Malaysian context information
+        if 'resource_data' in data and len(resource_data) > 0:
+            min_date = resource_data['date'].min()
+            max_date = resource_data['date'].max()
+            if min_date.year <= 2020 and max_date.year >= 2020:
+                st.info("📊 **Data Context:** Charts include COVID-19 pandemic impact period (2020-2021) with MCO effects on operations.")
         
     except Exception as e:
-        st.error(f"Error creating overview plot: {e}")
+        st.error(f"Error creating overview dashboard: {e}")
+        st.write("Debug info:", str(e))
 
 def plot_population_forecast(historical_data, forecast_data, forecast_dates):
     """
-    Create population forecast visualization
+    Create enhanced population forecast visualization with Malaysian context
     """
     try:
         fig = go.Figure()
         
-        # Historical data
+        # Historical data with enhanced styling
         fig.add_trace(go.Scatter(
             x=historical_data['date'],
             y=historical_data['total_prisoners'],
-            mode='lines',
-            name='Historical',
-            line=dict(color='blue', width=2)
+            mode='lines+markers',
+            name='Historical Data',
+            line=dict(color='#1f77b4', width=3),
+            marker=dict(size=4, color='#1f77b4'),
+            hovertemplate='<b>Date:</b> %{x}<br><b>Prisoners:</b> %{y:,.0f}<extra></extra>'
         ))
         
-        # Forecast data
+        # Forecast data with confidence styling
         if forecast_data is not None and len(forecast_data) > 0:
             fig.add_trace(go.Scatter(
                 x=forecast_dates,
                 y=forecast_data,
-                mode='lines',
+                mode='lines+markers',
                 name='Forecast',
-                line=dict(color='red', width=2, dash='dash')
+                line=dict(color='#ff7f0e', width=3, dash='dash'),
+                marker=dict(size=5, color='#ff7f0e', symbol='diamond'),
+                hovertemplate='<b>Date:</b> %{x}<br><b>Forecast:</b> %{y:,.0f}<extra></extra>'
+            ))
+            
+            # Add confidence bands (±5% uncertainty)
+            uncertainty = np.array(forecast_data) * 0.05
+            upper_bound = np.array(forecast_data) + uncertainty
+            lower_bound = np.array(forecast_data) - uncertainty
+            
+            fig.add_trace(go.Scatter(
+                x=list(forecast_dates) + list(forecast_dates[::-1]),
+                y=list(upper_bound) + list(lower_bound[::-1]),
+                fill='toself',
+                fillcolor='rgba(255,127,14,0.2)',
+                line=dict(color='rgba(255,255,255,0)'),
+                showlegend=True,
+                name='Confidence Interval (±5%)',
+                hoverinfo='skip'
             ))
         
-        fig.update_layout(
-            title='Prison Population Forecast',
-            xaxis_title='Date',
-            yaxis_title='Number of Prisoners',
-            hovermode='x unified'
+        # Add Malaysian prison system capacity line
+        max_capacity = 97000
+        fig.add_hline(
+            y=max_capacity, 
+            line_dash="dot", 
+            line_color="red",
+            annotation_text="System Capacity (97,000)",
+            annotation_position="top right"
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        # Add overcrowding warning line (90% capacity)
+        warning_capacity = max_capacity * 0.9
+        fig.add_hline(
+            y=warning_capacity, 
+            line_dash="dot", 
+            line_color="orange",
+            annotation_text="Overcrowding Alert (90%)",
+            annotation_position="bottom right"
+        )
+        
+        # Enhanced layout with Malaysian styling
+        fig.update_layout(
+            title=dict(
+                text='Malaysian Prison Population Forecast',
+                font=dict(size=18, color='#2c3e50')
+            ),
+            xaxis_title='Date',
+            yaxis_title='Number of Prisoners',
+            hovermode='x unified',
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(size=12),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            height=500
+        )
+        
+        # Format y-axis with thousands separator
+        fig.update_yaxes(tickformat=',.')
+        
+        st.plotly_chart(fig, use_container_width=True, key="population_forecast_chart")
         
     except Exception as e:
         st.error(f"Error creating population forecast plot: {e}")
+        st.write("Debug info:", str(e))
 
 def plot_staffing_breakdown(staffing_data):
     """
@@ -166,7 +376,7 @@ def plot_staffing_breakdown(staffing_data):
             annotations=[dict(text='Staff', x=0.5, y=0.5, font_size=20, showarrow=False)]
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="staffing_breakdown_chart")
         
     except Exception as e:
         st.error(f"Error creating staffing breakdown plot: {e}")
@@ -196,7 +406,7 @@ def plot_cost_breakdown(resource_data):
             annotations=[dict(text='Costs', x=0.5, y=0.5, font_size=20, showarrow=False)]
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="cost_breakdown_chart")
         
     except Exception as e:
         st.error(f"Error creating cost breakdown plot: {e}")
@@ -237,7 +447,7 @@ def plot_trend_analysis(data, column, title):
             hovermode='x unified'
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="trend_analysis_chart")
         
     except Exception as e:
         st.error(f"Error creating trend analysis plot: {e}")
@@ -269,7 +479,7 @@ def plot_correlation_matrix(data, columns):
             yaxis_title='Variables'
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="correlation_matrix_chart")
         
     except Exception as e:
         st.error(f"Error creating correlation matrix: {e}")
@@ -303,7 +513,7 @@ def plot_seasonal_decomposition(data, column):
             xaxis=dict(tickmode='array', tickvals=list(range(1, 13)))
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="seasonal_decomposition_chart")
         
     except Exception as e:
         st.error(f"Error creating seasonal decomposition plot: {e}")
@@ -352,7 +562,7 @@ def plot_model_performance(metrics_data):
             height=400
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="model_performance_chart")
         
     except Exception as e:
         st.error(f"Error creating model performance plot: {e}")
@@ -414,7 +624,7 @@ def plot_forecast_comparison(historical_data, forecasts, forecast_dates, metric_
             hovermode='x unified'
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="forecast_comparison_chart")
         
     except Exception as e:
         st.error(f"Error creating forecast comparison plot: {e}")

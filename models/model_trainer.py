@@ -20,33 +20,47 @@ class PrisonForecastModels:
         self.model_metrics = {}
         self.feature_importance = {}
         
-    def prepare_features(self, data, target_column, lookback_window=3):
+    def prepare_features(self, data, target_column, lookback_window=4):
         """
-        Prepare features for time series forecasting
+        Prepare features for time series forecasting - enhanced for 5-year data
         """
         df = data.copy()
         df['date'] = pd.to_datetime(df['date'])
         df = df.sort_values('date')
         
-        # Create lag features (reduced window to avoid too many NaNs)
+        # Create lag features with longer lookback for 5-year data
         for lag in range(1, lookback_window + 1):
             df[f'{target_column}_lag_{lag}'] = df[target_column].shift(lag)
         
-        # Create rolling statistics (smaller windows)
-        for window in [3, 6]:
+        # Create rolling statistics with multiple windows for better seasonality capture
+        for window in [3, 6, 12]:  # Added 12-month window for annual patterns
             df[f'{target_column}_rolling_mean_{window}'] = df[target_column].rolling(window=window).mean()
             df[f'{target_column}_rolling_std_{window}'] = df[target_column].rolling(window=window).std()
         
-        # Create trend features
+        # Enhanced seasonal features for Malaysian context
         df['month'] = df['date'].dt.month
         df['quarter'] = df['date'].dt.quarter
         df['year'] = df['date'].dt.year
         df['days_from_start'] = (df['date'] - df['date'].min()).dt.days
         
-        # Fill NaN values in rolling statistics with forward fill
-        df = df.ffill()
+        # Malaysian specific seasonal indicators
+        df['is_ramadan_period'] = df['month'].isin([4, 5, 9, 10]).astype(int)
+        df['is_festive_season'] = df['month'].isin([1, 2, 12]).astype(int)
+        df['is_monsoon_season'] = df['month'].isin([11, 12, 1]).astype(int)
         
-        # Remove rows with remaining NaN values
+        # Year-over-year change
+        df[f'{target_column}_yoy_change'] = df[target_column].pct_change(periods=12)
+        
+        # Trend indicator
+        df['trend'] = np.arange(len(df))
+        
+        # Fill NaN values strategically
+        # Forward fill for rolling statistics
+        for col in df.columns:
+            if 'rolling' in col or 'yoy_change' in col:
+                df[col] = df[col].fillna(method='ffill').fillna(method='bfill')
+        
+        # Remove rows with remaining NaN values (mainly from lag features)
         df = df.dropna()
         
         return df
@@ -69,10 +83,22 @@ class PrisonForecastModels:
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
-        # Train multiple models
+        # Train multiple models with enhanced parameters for 5-year data
         models = {
-            'random_forest': RandomForestRegressor(n_estimators=100, random_state=42),
-            'gradient_boosting': GradientBoostingRegressor(n_estimators=100, random_state=42),
+            'random_forest': RandomForestRegressor(
+                n_estimators=150, 
+                max_depth=12, 
+                min_samples_split=4,
+                min_samples_leaf=2,
+                random_state=42
+            ),
+            'gradient_boosting': GradientBoostingRegressor(
+                n_estimators=120, 
+                learning_rate=0.08,
+                max_depth=8,
+                min_samples_split=4,
+                random_state=42
+            ),
             'linear_regression': LinearRegression()
         }
         

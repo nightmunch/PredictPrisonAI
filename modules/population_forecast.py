@@ -18,11 +18,11 @@ from utils.visualization import (
 from utils.data_utils import prepare_forecast_data, calculate_growth_rate
 
 
-def show_population_forecast(data, models):
+def show_population_forecast(data, models, l):
     """
     Display population forecasting page
     """
-    st.header("👥 Prison Population Forecast")
+    st.header(l["population_forecast_header"])
     st.markdown("---")
 
     if "population_data" not in data:
@@ -32,22 +32,22 @@ def show_population_forecast(data, models):
     population_data = data["population_data"]
 
     # Sidebar controls
-    st.sidebar.subheader("Forecast Parameters")
+    st.sidebar.subheader(l["forecast_parameters"])
 
     # Geographic selection
     forecast_level = st.sidebar.selectbox(
-        "Forecast Level", ["Overall Malaysia", "By State", "By Prison"]
+        l["forecast_level"], [l["overall_malaysia"], l["by_state"], l["by_prison"]]
     )
 
     selected_state = None
     selected_prison = None
 
-    if forecast_level == "By State":
+    if forecast_level == l["by_state"]:
         states = list(data["malaysia_prisons"].keys())
-        selected_state = st.sidebar.selectbox("Select State:", states)
-    elif forecast_level == "By Prison":
+        selected_state = st.sidebar.selectbox(l["select_state"], states)
+    elif forecast_level == l["by_prison"]:
         states = list(data["malaysia_prisons"].keys())
-        selected_state = st.sidebar.selectbox("Select State:", states)
+        selected_state = st.sidebar.selectbox(l["select_state"], states)
         prisons = data["malaysia_prisons"][selected_state]
         prison_names = []
         for p in prisons:
@@ -55,17 +55,17 @@ def show_population_forecast(data, models):
                 prison_names.append(p["name"])
             else:
                 prison_names.append(p)
-        prison_options = ["All Prisons in State"] + prison_names
-        selected_prison = st.sidebar.selectbox("Select Prison:", prison_options)
-        if selected_prison == "All Prisons in State":
+        prison_options = [l["all_prisons_in_state"]] + prison_names
+        selected_prison = st.sidebar.selectbox(l["select_prison"], prison_options)
+        if selected_prison == l["all_prisons_in_state"]:
             selected_prison = None
 
     forecast_months = st.sidebar.slider(
-        "Forecast Period (months)", min_value=6, max_value=36, value=24, step=6
+        l["forecast_period"], min_value=6, max_value=36, value=24, step=6
     )
 
     scenario = st.sidebar.selectbox(
-        "Scenario Analysis", ["Base Case", "Optimistic", "Pessimistic", "Policy Change"]
+        l["scenario_analysis"], [l["base_case"], l["enhanced_rehabilitation"], l["economic_impact"]]
     )
 
     # Filter data based on selection
@@ -233,6 +233,17 @@ def show_population_forecast(data, models):
 
             # Scenario impact
             st.subheader("Scenario Impact")
+            
+            # Add Malaysian context explanations
+            with st.expander("📊 Scenario Explanations", expanded=False):
+                st.markdown("""
+                **Base Case**: Current trend continuation based on historical patterns
+                
+                **Enhanced Rehabilitation**: Impact of improved rehabilitation programs reducing recidivism rates, aligned with Malaysia's prison reform initiatives
+                
+                **Economic Impact**: Population changes due to economic fluctuations affecting crime rates and sentencing patterns
+                """)
+            
             create_scenario_comparison(population_data, forecast_months, models)
 
         else:
@@ -323,29 +334,31 @@ def generate_population_forecast(data, months, scenario, models):
 
 def get_scenario_factor(scenario, month_index):
     """
-    Get scenario adjustment factor
+    Get scenario adjustment factor for Malaysian prison context
     """
     if scenario == "Base Case":
         return 1.0
-    elif scenario == "Optimistic":
-        # Gradual decrease in population growth
-        return 1.0 - (month_index * 0.002)
-    elif scenario == "Pessimistic":
-        # Increased population growth
-        return 1.0 + (month_index * 0.003)
-    elif scenario == "Policy Change":
-        # Step change after 6 months
-        return 0.95 if month_index >= 6 else 1.0
+    elif scenario == "Enhanced Rehabilitation":
+        # Gradual decrease due to improved rehabilitation programs reducing recidivism
+        # More aggressive reduction as programs mature
+        return 1.0 - (month_index * 0.004)
+    elif scenario == "Economic Impact":
+        # Economic fluctuations affecting crime rates
+        # Initial increase then stabilization
+        if month_index <= 12:
+            return 1.0 + (month_index * 0.002)
+        else:
+            return 1.024 - ((month_index - 12) * 0.001)
     else:
         return 1.0
 
 
 def create_scenario_comparison(data, months, models):
     """
-    Create scenario comparison visualization
+    Create scenario comparison visualization for Malaysian prison context
     """
     try:
-        scenarios = ["Base Case", "Optimistic", "Pessimistic", "Policy Change"]
+        scenarios = ["Base Case", "Enhanced Rehabilitation", "Economic Impact"]
         fig = go.Figure()
 
         # Historical data
@@ -359,7 +372,7 @@ def create_scenario_comparison(data, months, models):
             )
         )
 
-        colors = ["red", "green", "orange", "purple"]
+        colors = ["red", "green", "orange"]  # Base Case, Enhanced Rehabilitation, Economic Impact
 
         for i, scenario in enumerate(scenarios):
             forecast_data, forecast_dates = generate_population_forecast(
@@ -384,7 +397,7 @@ def create_scenario_comparison(data, months, models):
             hovermode="x unified",
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="population_forecast_main_chart")
 
     except Exception as e:
         st.error(f"Error creating scenario comparison: {e}")
@@ -429,7 +442,7 @@ def create_flow_analysis(data):
             title="Prison Population Flow Analysis", showlegend=False, height=400
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="capacity_analysis_chart")
 
         # Net flow calculation
         net_flow = data["monthly_admissions"] - data["monthly_releases"]
@@ -477,7 +490,7 @@ def create_gender_analysis(data):
             hovermode="x unified",
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="population_distribution_chart")
 
     except Exception as e:
         st.error(f"Error creating gender analysis: {e}")

@@ -1,9 +1,23 @@
 import streamlit as st
+
+# Page configuration MUST be the first Streamlit command
+st.set_page_config(
+    page_title="Malaysia Prison Analytics - Powered By Credence AI & Analytics",
+    page_icon="⚖️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import os
 import sys
+import warnings
+import base64
+
+# Suppress scikit-learn version warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
 # Add the current directory to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -12,11 +26,23 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils.data_utils import load_or_generate_data, load_models
 from utils.visualization import plot_overview_metrics
 
+def get_logo_base64():
+    """Convert logo image to base64 for embedding in HTML"""
+    try:
+        logo_path = os.path.join(os.path.dirname(__file__), "assets", "Penjara-logo.jpg")
+        with open(logo_path, "rb") as f:
+            img_bytes = f.read()
+        return base64.b64encode(img_bytes).decode()
+    except Exception as e:
+        print(f"Error loading logo: {e}")
+        return ""
+
 # Language dictionaries
 LANG = {
     "en": {
-        "page_title": "Malaysia Prison Predictive Planning",
-        "title": "\U0001f3ea Malaysia Prison Predictive Planning System",
+        "page_title": "Malaysia Prison Analytics Powered By Credence AI & Analytics",
+        "title": "Malaysia Prison Analytics\nPowered By Credence AI & Analytics",
+        "subtitle": "Advanced Predictive Analytics for Malaysian Prison Administration",
         "navigation": "Navigation",
         "select_page": "Select a page:",
         "pages": [
@@ -26,13 +52,13 @@ LANG = {
             "Resource Forecast",
             "Model Performance",
         ],
-        "dashboard_header": "\U0001f4ca Dashboard Overview",
+        "dashboard_header": "📊 Executive Dashboard",
         "state_selector": "Select State:",
         "prison_selector": "Select Prison:",
         "all_states": "All States",
         "all_prisons": "All Prisons",
         "all_prisons_in_state": "All Prisons in State",
-        "prison_system_by_state": "\U0001f5fa\ufe0f Prison System by State",
+        "prison_system_by_state": "🗺️ Prison System by State",
         "current_population": "Current Prison Population",
         "daily_cost": "Daily Cost per Prisoner",
         "capacity_utilization": "Capacity Utilization",
@@ -42,8 +68,8 @@ LANG = {
         "female_prisoners": "Female Prisoners",
         "drug_crimes": "Drug Crimes",
         "violent_crimes": "Violent Crimes",
-        "prison_population_by_state": "\U0001f5fa\ufe0f Prison Population by State",
-        "historical_trends": "\U0001f4c8 Historical Trends",
+        "prison_population_by_state": "🗺️ Prison Population by State",
+        "historical_trends": "📈 Historical Trends",
         "system_info": "\u2139\ufe0f System Information",
         "data_coverage": "**Data Coverage:**\n- Historical data: 5 years\n- Forecast horizon: 2 years\n- Update frequency: Monthly",
         "models_loaded": "\u2705 Models loaded and ready",
@@ -63,26 +89,109 @@ LANG = {
         "malay": "Malay",
         "no_historical_data": "No historical data available for the selected state/prison.",
         "no_model_status": "No model status information available.",
+        
+        # Population Forecast Page
+        "population_forecast_header": "👥 Prison Population Forecast",
+        "forecast_parameters": "Forecast Parameters",
+        "forecast_level": "Forecast Level",
+        "overall_malaysia": "Overall Malaysia",
+        "by_state": "By State", 
+        "by_prison": "By Prison",
+        "select_state": "Select State:",
+        "select_prison": "Select Prison:",
+        "forecast_period": "Forecast Period (months):",
+        "scenario_analysis": "Scenario Analysis",
+        "enhanced_rehabilitation": "Enhanced Rehabilitation",
+        "economic_impact": "Economic Impact",
+        "base_case": "Base Case",
+        "scenario_factor": "Scenario Factor:",
+        "generate_forecast_btn": "Generate Forecast",
+        "current_metrics": "Current Metrics",
+        "forecast_results": "Forecast Results",
+        "monthly_forecast": "Monthly Forecast",
+        "demographic_analysis": "Demographic Analysis",
+        "trend_analysis": "Trend Analysis",
+        "seasonal_patterns": "Seasonal Patterns",
+        
+        # Resource Forecast Page
+        "resource_forecast_header": "💰 Resource Forecast",
+        "cost_forecast_planning": "Cost Forecast and Budget Planning",
+        "cost_projections": "Cost Projections",
+        "cost_breakdown_forecast": "Cost Breakdown Forecast",
+        "capacity_planning_infrastructure": "Capacity Planning and Infrastructure",
+        "efficiency_analysis_optimization": "Efficiency Analysis and Optimization",
+        "resource_optimization_planning": "Resource Optimization and Planning",
+        "optimization_opportunities": "**Optimization Opportunities:**",
+        "cost_summary": "**Cost Summary:**",
+        "monthly_cost_per_prisoner": "• Monthly cost per prisoner: MYR {:.0f}",
+        "annual_cost_projection": "• Annual cost projection: MYR {:.1f}M",
+        
+        # Resource Forecast Tabs
+        "cost_forecast_tab": "📈 Cost Forecast",
+        "capacity_planning_tab": "🏗️ Capacity Planning", 
+        "efficiency_analysis_tab": "⚡ Efficiency Analysis",
+        "resource_optimization_tab": "📊 Resource Optimization",
+        
+        # Resource Forecast Parameters
+        "resource_forecast_level": "Resource Forecast Level",
+        "malaysia_overall": "Malaysia Overall",
+        "cost_inflation_rate": "Cost Inflation Rate (%/year)",
+        "efficiency_improvement_target": "Efficiency Improvement Target (%)",
+        
+        # Resource Forecast Info Messages
+        "showing_data_for": "📊 Showing data for {:.1%} of national population",
+        "capacity_planning_analysis": "📋 Capacity planning analysis based on filtered data",
+        "energy_efficiency_analysis": "⚡ Energy and operational efficiency analysis", 
+        "resource_optimization_recommendations": "📊 Resource optimization recommendations",
+        
+        # Model Performance Page
+        "model_performance_header": "🤖 Model Performance",
+        "model_overview": "Model Overview",
+        "performance_metrics": "Performance Metrics",
+        
+        # Chart Titles and Labels
+        "date": "Date",
+        "number_of_prisoners": "Number of Prisoners",
+        "current_staff_distribution": "Current Staff Distribution",
+        "monthly_cost_distribution": "Monthly Cost Distribution (MYR)",
+        "correlation_matrix": "Correlation Matrix",
+        "variables": "Variables",
+        "seasonal_pattern": "Seasonal Pattern",
+        "month": "Month",
+        "model_performance_comparison": "Model Performance Comparison",
+        "forecast": "Forecast",
+        
+        # Common Terms
+        "prisoners": "prisoners",
+        "staff": "staff",
+        "myr": "MYR",
+        "months_unit": "months",
+        "years": "years",
+        "total": "Total",
+        "average": "Average",
+        "maximum": "Maximum",
+        "minimum": "Minimum",
     },
     "ms": {
-        "page_title": "Sistem Perancangan Prediktif Penjara Malaysia",
-        "title": "\U0001f3ea Sistem Perancangan Prediktif Penjara Malaysia",
+        "page_title": "Analitik Penjara Malaysia Dikuasakan Oleh Credence AI & Analytics",
+        "title": "Analitik Penjara Malaysia\nDikuasakan Oleh Credence AI & Analytics",
+        "subtitle": "Analitik Prediktif Termaju untuk Pentadbiran Penjara Malaysia",
         "navigation": "Navigasi",
         "select_page": "Pilih halaman:",
         "pages": [
-            "Papan Pemuka Utama",
+            "Papan Pemuka Eksekutif",
             "Ramalan Populasi",
             # "Ramalan Kakitangan",  # Ciri dilumpuhkan
             "Ramalan Sumber",
             "Prestasi Model",
         ],
-        "dashboard_header": "\U0001f4ca Papan Pemuka Utama",
+        "dashboard_header": "📊 Papan Pemuka Eksekutif",
         "state_selector": "Pilih Negeri:",
         "prison_selector": "Pilih Penjara:",
         "all_states": "Semua Negeri",
         "all_prisons": "Semua Penjara",
         "all_prisons_in_state": "Semua Penjara dalam Negeri",
-        "prison_system_by_state": "\U0001f5fa\ufe0f Sistem Penjara mengikut Negeri",
+        "prison_system_by_state": "🗺️ Sistem Penjara mengikut Negeri",
         "current_population": "Populasi Penjara Semasa",
         "daily_cost": "Kos Harian per Banduan",
         "capacity_utilization": "Penggunaan Kapasiti",
@@ -92,7 +201,7 @@ LANG = {
         "female_prisoners": "Banduan Perempuan",
         "drug_crimes": "Jenayah Dadah",
         "violent_crimes": "Jenayah Kekerasan",
-        "prison_population_by_state": "\U0001f5fa\ufe0f Populasi Penjara mengikut Negeri",
+        "prison_population_by_state": "🗺️ Populasi Penjara mengikut Negeri",
         "historical_trends": "\U0001f4c8 Trend Sejarah",
         "system_info": "\u2139\ufe0f Maklumat Sistem",
         "data_coverage": "**Liputan Data:**\n- Data sejarah: 5 tahun\n- Horizon ramalan: 2 tahun\n- Kekerapan kemas kini: Bulanan",
@@ -110,19 +219,93 @@ LANG = {
         "ensure_data": "Sila pastikan buku nota penjanaan data telah dijalankan dan model telah dilatih.",
         "language": "Bahasa",
         "english": "Inggeris",
-        "malay": "Melayu",
+        "malay": "Bahasa Malaysia",
         "no_historical_data": "Tiada data sejarah untuk negeri/penjara yang dipilih.",
         "no_model_status": "Tiada maklumat status model tersedia.",
+        
+        # Population Forecast Page
+        "population_forecast_header": "👥 Ramalan Populasi Penjara",
+        "forecast_parameters": "Parameter Ramalan",
+        "forecast_level": "Tahap Ramalan",
+        "overall_malaysia": "Keseluruhan Malaysia",
+        "by_state": "Mengikut Negeri", 
+        "by_prison": "Mengikut Penjara",
+        "select_state": "Pilih Negeri:",
+        "select_prison": "Pilih Penjara:",
+        "forecast_period": "Tempoh Ramalan (bulan):",
+        "scenario_analysis": "Analisis Senario",
+        "enhanced_rehabilitation": "Pemulihan Dipertingkat",
+        "economic_impact": "Kesan Ekonomi",
+        "base_case": "Kes Asas",
+        "scenario_factor": "Faktor Senario:",
+        "generate_forecast_btn": "Jana Ramalan",
+        "current_metrics": "Metrik Semasa",
+        "forecast_results": "Keputusan Ramalan",
+        "monthly_forecast": "Ramalan Bulanan",
+        "demographic_analysis": "Analisis Demografi",
+        "trend_analysis": "Analisis Trend",
+        "seasonal_patterns": "Corak Musiman",
+        
+        # Resource Forecast Page
+        "resource_forecast_header": "💰 Ramalan Sumber",
+        "cost_forecast_planning": "Ramalan Kos dan Perancangan Belanjawan",
+        "cost_projections": "Unjuran Kos",
+        "cost_breakdown_forecast": "Ramalan Pecahan Kos",
+        "capacity_planning_infrastructure": "Perancangan Kapasiti dan Infrastruktur",
+        "efficiency_analysis_optimization": "Analisis Kecekapan dan Pengoptimuman",
+        "resource_optimization_planning": "Pengoptimuman dan Perancangan Sumber",
+        "optimization_opportunities": "**Peluang Pengoptimuman:**",
+        "cost_summary": "**Ringkasan Kos:**",
+        "monthly_cost_per_prisoner": "• Kos bulanan per banduan: MYR {:.0f}",
+        "annual_cost_projection": "• Unjuran kos tahunan: MYR {:.1f}J",
+        
+        # Resource Forecast Tabs
+        "cost_forecast_tab": "📈 Ramalan Kos",
+        "capacity_planning_tab": "🏗️ Perancangan Kapasiti", 
+        "efficiency_analysis_tab": "⚡ Analisis Kecekapan",
+        "resource_optimization_tab": "📊 Pengoptimuman Sumber",
+        
+        # Resource Forecast Parameters
+        "resource_forecast_level": "Tahap Ramalan Sumber",
+        "malaysia_overall": "Keseluruhan Malaysia",
+        "cost_inflation_rate": "Kadar Inflasi Kos (%/tahun)",
+        "efficiency_improvement_target": "Sasaran Peningkatan Kecekapan (%)",
+        
+        # Resource Forecast Info Messages
+        "showing_data_for": "📊 Menunjukkan data untuk {:.1%} daripada populasi kebangsaan",
+        "capacity_planning_analysis": "📋 Analisis perancangan kapasiti berdasarkan data yang ditapis",
+        "energy_efficiency_analysis": "⚡ Analisis kecekapan tenaga dan operasi", 
+        "resource_optimization_recommendations": "📊 Cadangan pengoptimuman sumber",
+        
+        # Model Performance Page
+        "model_performance_header": "🤖 Prestasi Model",
+        "model_overview": "Gambaran Model",
+        "performance_metrics": "Metrik Prestasi",
+        
+        # Chart Titles and Labels
+        "date": "Tarikh",
+        "number_of_prisoners": "Bilangan Banduan",
+        "current_staff_distribution": "Taburan Kakitangan Semasa",
+        "monthly_cost_distribution": "Taburan Kos Bulanan (MYR)",
+        "correlation_matrix": "Matriks Korelasi",
+        "variables": "Pembolehubah",
+        "seasonal_pattern": "Corak Musiman",
+        "month": "Bulan",
+        "model_performance_comparison": "Perbandingan Prestasi Model",
+        "forecast": "Ramalan",
+        
+        # Common Terms
+        "prisoners": "banduan",
+        "staff": "kakitangan",
+        "myr": "MYR",
+        "months_unit": "bulan",
+        "years": "tahun",
+        "total": "Jumlah",
+        "average": "Purata",
+        "maximum": "Maksimum",
+        "minimum": "Minimum",
     },
 }
-
-# Configure the page (default to English)
-st.set_page_config(
-    page_title=LANG["en"]["page_title"],
-    page_icon="\U0001f3ea",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
 
 # Add custom CSS for mobile-friendly layout
@@ -142,6 +325,61 @@ st.markdown(
 
 
 def main():
+    # Custom CSS for professional styling
+    st.markdown("""
+    <style>
+    .main > div {
+        padding-top: 2rem;
+    }
+    .stTitle {
+        color: #1e3a8a;
+        font-weight: 700;
+        text-align: center;
+        border-bottom: 3px solid #3b82f6;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        color: white;
+        margin: 0.5rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin: 0;
+    }
+    .sidebar .sidebar-content {
+        background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+    .professional-header {
+        background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .professional-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+    }
+        background: white;
+        border-radius: 50%;
+        padding: 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # Language selection
     lang = st.sidebar.selectbox(
         LANG["en"]["language"] + " / " + LANG["ms"]["language"],
@@ -149,8 +387,21 @@ def main():
         format_func=lambda x: LANG[x]["english"] if x == "en" else LANG[x]["malay"],
     )
     l = LANG[lang]
-    st.title(l["title"])
-    st.markdown("---")
+    
+    # Professional header with official Malaysian Prison logo
+    st.markdown(f'''
+    <div class="professional-header">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; width: 100%;">
+            <div style="flex-shrink: 0;">
+                <img src="data:image/jpeg;base64,{get_logo_base64()}" style="width: 80px; height: 80px; border-radius: 10px; border: 2px solid white;">
+            </div>
+            <div style="text-align: center; flex-grow: 1;">
+                <h1 style="margin: 0; font-size: 2.5rem; color: white;">{l["title"]}</h1>
+                <p style="font-size: 1.1rem; opacity: 0.9; margin-top: 0.5rem; color: white;">{l["subtitle"]}</p>
+            </div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
 
     # Sidebar navigation
     st.sidebar.title(l["navigation"])
@@ -166,6 +417,33 @@ def main():
         if data is None:
             st.error(l["failed_load_data"])
             return
+            
+        # Add model status information to data
+        if models:
+            expected_models = ['population', 'staffing', 'resource']
+            available_models = [model for model in expected_models if model in models]
+            
+            model_status = {
+                "all_models_operational": len(available_models) == len(expected_models),
+                "available_models": available_models,
+                "total_models": len(expected_models),
+                "available_count": len(available_models)
+            }
+            
+            if len(available_models) < len(expected_models):
+                missing_models = [model for model in expected_models if model not in available_models]
+                model_status["retraining_info"] = f"Missing models: {', '.join(missing_models)}. Please retrain these models."
+                
+            data["model_status"] = model_status
+        else:
+            data["model_status"] = {
+                "all_models_operational": False,
+                "available_models": [],
+                "total_models": 3,
+                "available_count": 0,
+                "retraining_info": "No models found. Please train the models first."
+            }
+            
     except Exception as e:
         st.error(l["error_loading"] + str(e))
         st.info(l["ensure_data"])
@@ -177,170 +455,265 @@ def main():
     elif page == l["pages"][1]:
         from modules.population_forecast import show_population_forecast
 
-        show_population_forecast(data, models)
+        show_population_forecast(data, models, l)
     # elif page == l['pages'][2]:  # Staffing/Staffing Forecast (disabled)
     #     from modules.staffing_forecast import show_staffing_forecast
-    #     show_staffing_forecast(data, models)
+    #     show_staffing_forecast(data, models, l)
     elif page == l["pages"][2]:
         from modules.resource_forecast import show_resource_forecast
 
-        show_resource_forecast(data, models)
+        show_resource_forecast(data, models, l)
     elif page == l["pages"][3]:
         from modules.model_performance import show_model_performance
 
-        show_model_performance(data, models)
+        show_model_performance(data, models, l)
 
 
 def show_dashboard_overview(data, models, l):
-    st.header(l["dashboard_header"])
+    st.markdown(f"## {l['dashboard_header']}")
+    st.markdown("---")
+    
+    # Professional KPI cards
+    if "population_data" in data and "resource_data" in data:
+        latest_pop = data["population_data"].iloc[-1]
+        latest_res = data["resource_data"].iloc[-1]
+        
+        # Top row metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <p class="metric-label">{l["current_population"]}</p>
+                <p class="metric-value">{latest_pop["total_prisoners"]:,.0f}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <p class="metric-label">{l["daily_cost"]}</p>
+                <p class="metric-value">RM {latest_res["daily_cost_per_prisoner"]:.2f}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col3:
+            st.markdown(f"""
+            <div class="metric-card">
+                <p class="metric-label">{l["capacity_utilization"]}</p>
+                <p class="metric-value">{latest_res["capacity_utilization"]:.1f}%</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col4:
+            st.markdown(f"""
+            <div class="metric-card">
+                <p class="metric-label">{l["avg_sentence"]}</p>
+                <p class="metric-value">{latest_pop["avg_sentence_months"]:.1f} {l["months"]}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Second row - Demographics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        if "male_prisoners" in latest_pop and "female_prisoners" in latest_pop:
+            total = latest_pop["male_prisoners"] + latest_pop["female_prisoners"]
+            male_pct = 100 * latest_pop["male_prisoners"] / total if total > 0 else 0
+            female_pct = 100 * latest_pop["female_prisoners"] / total if total > 0 else 0
+            
+            with col1:
+                st.markdown(f"""
+                <div class="metric-card" style="background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);">
+                    <p class="metric-label">{l["male_prisoners"]}</p>
+                    <p class="metric-value">{male_pct:.1f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with col2:
+                st.markdown(f"""
+                <div class="metric-card" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);">
+                    <p class="metric-label">{l["female_prisoners"]}</p>
+                    <p class="metric-value">{female_pct:.1f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        if "drug_crimes" in latest_pop and "violent_crimes" in latest_pop:
+            drug_pct = 100 * latest_pop["drug_crimes"] / latest_pop["total_prisoners"]
+            violent_pct = 100 * latest_pop["violent_crimes"] / latest_pop["total_prisoners"]
+            
+            with col3:
+                st.markdown(f"""
+                <div class="metric-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <p class="metric-label">{l["drug_crimes"]}</p>
+                    <p class="metric-value">{drug_pct:.1f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with col4:
+                st.markdown(f"""
+                <div class="metric-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <p class="metric-label">{l["violent_crimes"]}</p>
+                    <p class="metric-value">{violent_pct:.1f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
 
-    # State and Prison Selector
-    selected_state = l["all_states"]
-    selected_prison = l["all_prisons"]
+    st.markdown("---")
 
+    # Enhanced state/prison selector
     if "prison_detail_data" in data and "malaysia_prisons" in data:
-        st.subheader(l["prison_system_by_state"])
+        st.markdown(f"### {l['prison_system_by_state']}")
+        
         col1, col2 = st.columns(2)
         with col1:
             selected_state = st.selectbox(
                 l["state_selector"],
                 [l["all_states"]] + list(data["malaysia_prisons"].keys()),
+                key="state_selector"
             )
+        
         with col2:
             if selected_state != l["all_states"]:
                 prisons_in_state = data["malaysia_prisons"][selected_state]
-                prison_names = []
-                for prison in prisons_in_state:
-                    if isinstance(prison, dict):
-                        prison_names.append(prison["name"])
-                    else:
-                        prison_names.append(prison)
+                prison_names = [prison if isinstance(prison, str) else prison.get("name", str(prison)) 
+                              for prison in prisons_in_state]
                 selected_prison = st.selectbox(
-                    l["prison_selector"], [l["all_prisons_in_state"]] + prison_names
+                    l["prison_selector"], 
+                    [l["all_prisons_in_state"]] + prison_names,
+                    key="prison_selector"
                 )
             else:
                 selected_prison = l["all_prisons"]
-        st.markdown("---")
+                st.selectbox(l["prison_selector"], [l["all_prisons"]], disabled=True)
 
-    # Key metrics (mobile-friendly: use 2 columns)
-    col1, col2, col3, col4 = st.columns(4)
-    if "population_data" in data:
-        current_population = data["population_data"]["total_prisoners"].iloc[-1]
-        col1.metric(l["current_population"], f"{current_population:,.0f}")
-        # Calculate male and female percentages if columns exist
-        if (
-            "male_prisoners" in data["population_data"].columns
-            and "female_prisoners" in data["population_data"].columns
-        ):
-            latest_row = data["population_data"].iloc[-1]
-            total = latest_row["male_prisoners"] + latest_row["female_prisoners"]
-            if total > 0:
-                male_pct = 100 * latest_row["male_prisoners"] / total
-                female_pct = 100 * latest_row["female_prisoners"] / total
-                col3.metric(l["male_prisoners"], f"{male_pct:.1f}%")
-                col4.metric(l["female_prisoners"], f"{female_pct:.1f}%")
-    if "resource_data" in data:
-        daily_cost = data["resource_data"]["daily_cost_per_prisoner"].iloc[-1]
-        col2.metric(
-            l["daily_cost"],
-            (
-                f"MYR {daily_cost:.2f}"
-                if l["daily_cost"].startswith("Daily")
-                else f"RM {daily_cost:.2f}"
-            ),
-        )
-    if (
-        "resource_data" in data
-        and "capacity_utilization" in data["resource_data"].columns
-    ):
-        capacity_utilization = data["resource_data"]["capacity_utilization"].iloc[-1]
-        st.metric(l["capacity_utilization"], f"{capacity_utilization:.1f}%")
-    if (
-        "population_data" in data
-        and "avg_sentence_months" in data["population_data"].columns
-    ):
-        avg_sentence = data["population_data"]["avg_sentence_months"].iloc[-1]
-        st.metric(l["avg_sentence"], f"{avg_sentence:.1f} {l['months']}")
-    st.markdown("---")
-
-    # State/Prison specific data display
-    if "prison_detail_data" in data and "malaysia_prisons" in data:
+        # Display specific state/prison data
         if selected_state != l["all_states"]:
+            latest_detail = data["prison_detail_data"][
+                data["prison_detail_data"]["date"] == data["prison_detail_data"]["date"].max()
+            ]
+            
             if selected_prison != l["all_prisons_in_state"]:
-                prison_data = data["prison_detail_data"][
-                    (data["prison_detail_data"]["state"] == selected_state)
-                    & (data["prison_detail_data"]["prison_name"] == selected_prison)
+                # Individual prison data
+                prison_data = latest_detail[
+                    (latest_detail["state"] == selected_state) & 
+                    (latest_detail["prison_name"] == selected_prison)
                 ]
                 if not prison_data.empty:
-                    latest_data = prison_data.iloc[-1]
-                    st.info(
-                        f"**{selected_prison}** - {l['current_population'] if l['current_population'].startswith('Current') else 'Populasi Semasa'}: {latest_data['prison_population']:,} {'prisoners' if l['current_population'].startswith('Current') else 'banduan'}"
-                    )
+                    prison_info = prison_data.iloc[0]
+                    st.info(f"**{selected_prison}** - Total Population: {prison_info['prison_population']:,} prisoners")
+                    
+                    # Prison-specific metrics
                     col1, col2, col3, col4 = st.columns(4)
-                    col1.metric(
-                        l["male_prisoners"], f"{latest_data['male_prisoners']:,}"
-                    )
-                    col2.metric(
-                        l["female_prisoners"], f"{latest_data['female_prisoners']:,}"
-                    )
-                    col3.metric(l["drug_crimes"], f"{latest_data['drug_crimes']:,}")
-                    col4.metric(
-                        l["violent_crimes"], f"{latest_data['violent_crimes']:,}"
-                    )
+                    col1.metric("Male", f"{prison_info['male_prisoners']:,}")
+                    col2.metric("Female", f"{prison_info['female_prisoners']:,}")
+                    col3.metric("Drug Crimes", f"{prison_info['drug_crimes']:,}")
+                    col4.metric("Violent Crimes", f"{prison_info['violent_crimes']:,}")
             else:
-                state_data = data["prison_detail_data"][
-                    data["prison_detail_data"]["state"] == selected_state
-                ]
+                # State-level data
+                state_data = latest_detail[latest_detail["state"] == selected_state]
                 if not state_data.empty:
-                    latest_state = state_data[
-                        state_data["date"] == state_data["date"].max()
-                    ]
-                    total_state_pop = latest_state["prison_population"].sum()
-                    st.info(
-                        f"**{selected_state}{' State' if l['all_states']=='All States' else ''}** - {'Total Population' if l['all_states']=='All States' else 'Jumlah Populasi'}: {total_state_pop:,} {'prisoners' if l['all_states']=='All States' else 'banduan'} {'across' if l['all_states']=='All States' else 'merentasi'} {len(data['malaysia_prisons'][selected_state])} {'prisons' if l['all_states']=='All States' else 'penjara'}"
-                    )
-                    st.write(
-                        f"**{'Prisons in this state:' if l['all_states']=='All States' else 'Penjara dalam negeri ini:'}**"
-                    )
-                    for prison in data["malaysia_prisons"][selected_state]:
-                        prison_name = (
-                            prison["name"] if isinstance(prison, dict) else prison
-                        )
-                        prison_match = latest_state[
-                            latest_state["prison_name"] == prison_name
-                        ]
-                        if not prison_match.empty:
-                            prison_pop = prison_match["prison_population"].iloc[0]
-                            st.write(
-                                f"\u2022 {prison_name}: {prison_pop:,} {'prisoners' if l['all_states']=='All States' else 'banduan'}"
-                            )
-        # State comparison chart
-        st.subheader(l["prison_population_by_state"])
+                    total_state_pop = state_data["prison_population"].sum()
+                    prison_count = len(data["malaysia_prisons"][selected_state])
+                    
+                    st.info(f"**{selected_state} State** - Total Population: {total_state_pop:,} prisoners across {prison_count} prisons")
+                    
+                    # List prisons in state
+                    st.write("**Prisons in this state:**")
+                    for _, prison_row in state_data.iterrows():
+                        st.write(f"• {prison_row['prison_name']}: {prison_row['prison_population']:,} prisoners")
+
+    st.markdown("---")
+
+    # Professional overview charts
+    st.markdown(f"### {l['historical_trends']}")
+    if data:
+        plot_overview_metrics(data, chart_key="main_dashboard_overview", lang=l)
+
+    # Model status and system information
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 🤖 AI Model Status")
+        if models and len(models) > 0:
+            st.success("✅ All predictive models are operational")
+            if 'metrics' in models:
+                st.write("**Model Performance:**")
+                for model_name, metrics in models['metrics'].items():
+                    if 'r2' in metrics:
+                        st.write(f"• {model_name.title()}: R² = {metrics['r2']:.3f}")
+        else:
+            st.error("❌ Models not available - please retrain")
+    
+    with col2:
+        st.markdown(f"### {l['system_info']}")
+        st.markdown(l["data_coverage"])
+        
+        if models:
+            st.markdown("✅ " + l["models_loaded"])
+        else:
+            st.markdown("❌ " + l["models_not_available"])
+
+    # Quick actions section
+    st.markdown("---")
+    st.markdown(f"### {l['quick_actions']}")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("🚀 " + l["generate_forecast"], use_container_width=True):
+            st.info("Navigate to Population Forecast or Resource Forecast to generate predictions.")
+    
+    with col2:
+        if st.button("📊 " + l["export_data"], use_container_width=True):
+            if "population_data" in data:
+                csv_data = data["population_data"].to_csv(index=False)
+                st.download_button(
+                    label="📥 " + l["download_population_data"],
+                    data=csv_data,
+                    file_name="malaysia_prison_population_data.csv",
+                    mime="text/csv"
+                )
+    
+    with col3:
+        if st.button("🔍 " + l["model_status_check"], use_container_width=True):
+            if models:
+                st.success(l["all_models_operational"])
+            else:
+                st.warning(l["some_models_need_retraining"])
+
+    # State comparison chart
+    if "prison_detail_data" in data:
+        st.markdown("---")
+        st.markdown(f"### {l['prison_population_by_state']}")
+        
         latest_detail = data["prison_detail_data"][
-            data["prison_detail_data"]["date"]
-            == data["prison_detail_data"]["date"].max()
+            data["prison_detail_data"]["date"] == data["prison_detail_data"]["date"].max()
         ]
         state_totals = (
             latest_detail.groupby("state")["prison_population"]
             .sum()
             .sort_values(ascending=True)
         )
+        
         import plotly.express as px
-
         fig = px.bar(
             x=state_totals.values,
             y=state_totals.index,
             orientation="h",
             title=l["prison_population_by_state"],
-            labels={"x": l["current_population"], "y": l["all_states"]},
+            labels={"x": "Prison Population", "y": "State"},
+            color=state_totals.values,
+            color_continuous_scale="Blues"
         )
-        fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Overview charts
-    st.subheader(l["historical_trends"])
-    if data:
-        plot_overview_metrics(data)
+        fig.update_layout(
+            height=500,
+            font=dict(size=12),
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            title_font=dict(size=16, color='#1e3a8a')
+        )
+        st.plotly_chart(fig, use_container_width=True, key="welcome_overview_chart")
 
     # System information (mobile-friendly: stack vertically)
     st.markdown("---")
