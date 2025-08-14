@@ -113,6 +113,20 @@ LANG = {
         "trend_analysis": "Trend Analysis",
         "seasonal_patterns": "Seasonal Patterns",
         
+        # Additional Population Forecast translations
+        "forecast_statistics": "Forecast Statistics",
+        "projected_population_end": "Projected Population (End)",
+        "peak_population": "Peak Population",
+        "average_forecast_period": "Average (Forecast Period)",
+        "scenario_impact": "Scenario Impact",
+        "population_forecast_scenario_comparison": "Population Forecast - Scenario Comparison",
+        "malaysian_prison_population_forecast": "Malaysian Prison Population Forecast",
+        "population_forecast_malaysia_overall": "Population Forecast - Malaysia Overall",
+        "historical_data": "Historical Data",
+        "forecast": "Forecast",
+        "confidence_interval": "Confidence Interval (±5%)",
+        "number_of_prisoners": "Number of Prisoners",
+        
         # Resource Forecast Page
         "resource_forecast_header": "💰 Resource Forecast",
         "cost_forecast_planning": "Cost Forecast and Budget Planning",
@@ -245,6 +259,20 @@ LANG = {
         "demographic_analysis": "Analisis Demografi",
         "trend_analysis": "Analisis Trend",
         "seasonal_patterns": "Corak Musiman",
+        
+        # Additional Population Forecast translations
+        "forecast_statistics": "Statistik Ramalan",
+        "projected_population_end": "Populasi Unjuran (Akhir)",
+        "peak_population": "Populasi Puncak",
+        "average_forecast_period": "Purata (Tempoh Ramalan)",
+        "scenario_impact": "Kesan Senario",
+        "population_forecast_scenario_comparison": "Ramalan Populasi - Perbandingan Senario",
+        "malaysian_prison_population_forecast": "Ramalan Populasi Penjara Malaysia",
+        "population_forecast_malaysia_overall": "Ramalan Populasi - Keseluruhan Malaysia",
+        "historical_data": "Data Sejarah",
+        "forecast": "Ramalan",
+        "confidence_interval": "Selang Keyakinan (±5%)",
+        "number_of_prisoners": "Bilangan Banduan",
         
         # Resource Forecast Page
         "resource_forecast_header": "💰 Ramalan Sumber",
