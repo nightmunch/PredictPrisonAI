@@ -254,11 +254,22 @@ def plot_overview_metrics(data, chart_key="executive_dashboard_overview", lang=N
         st.error(f"Error creating overview dashboard: {e}")
         st.write("Debug info:", str(e))
 
-def plot_population_forecast(historical_data, forecast_data, forecast_dates):
+def plot_population_forecast(historical_data, forecast_data, forecast_dates, l=None):
     """
     Create enhanced population forecast visualization with Malaysian context
     """
     try:
+        # Default language if not provided
+        if l is None:
+            l = {
+                "malaysian_prison_population_forecast": "Malaysian Prison Population Forecast",
+                "historical_data": "Historical Data",
+                "forecast": "Forecast",
+                "confidence_interval": "Confidence Interval (±5%)",
+                "date": "Date",
+                "number_of_prisoners": "Number of Prisoners"
+            }
+            
         fig = go.Figure()
         
         # Historical data with enhanced styling
@@ -266,7 +277,7 @@ def plot_population_forecast(historical_data, forecast_data, forecast_dates):
             x=historical_data['date'],
             y=historical_data['total_prisoners'],
             mode='lines+markers',
-            name='Historical Data',
+            name=l["historical_data"],
             line=dict(color='#1f77b4', width=3),
             marker=dict(size=4, color='#1f77b4'),
             hovertemplate='<b>Date:</b> %{x}<br><b>Prisoners:</b> %{y:,.0f}<extra></extra>'
@@ -278,7 +289,7 @@ def plot_population_forecast(historical_data, forecast_data, forecast_dates):
                 x=forecast_dates,
                 y=forecast_data,
                 mode='lines+markers',
-                name='Forecast',
+                name=l["forecast"],
                 line=dict(color='#ff7f0e', width=3, dash='dash'),
                 marker=dict(size=5, color='#ff7f0e', symbol='diamond'),
                 hovertemplate='<b>Date:</b> %{x}<br><b>Forecast:</b> %{y:,.0f}<extra></extra>'
@@ -296,7 +307,7 @@ def plot_population_forecast(historical_data, forecast_data, forecast_dates):
                 fillcolor='rgba(255,127,14,0.2)',
                 line=dict(color='rgba(255,255,255,0)'),
                 showlegend=True,
-                name='Confidence Interval (±5%)',
+                name=l["confidence_interval"],
                 hoverinfo='skip'
             ))
         
@@ -323,11 +334,11 @@ def plot_population_forecast(historical_data, forecast_data, forecast_dates):
         # Enhanced layout with Malaysian styling
         fig.update_layout(
             title=dict(
-                text='Malaysian Prison Population Forecast',
+                text=l["malaysian_prison_population_forecast"],
                 font=dict(size=18, color='#2c3e50')
             ),
-            xaxis_title='Date',
-            yaxis_title='Number of Prisoners',
+            xaxis_title=l["date"],
+            yaxis_title=l["number_of_prisoners"],
             hovermode='x unified',
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',

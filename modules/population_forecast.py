@@ -201,16 +201,16 @@ def show_population_forecast(data, models, l):
 
         if forecast_data is not None:
             # Plot forecast using the appropriate data
-            plot_population_forecast(forecast_input, forecast_data, forecast_dates)
+            plot_population_forecast(forecast_input, forecast_data, forecast_dates, l)
 
             # Forecast statistics
-            st.subheader("Forecast Statistics")
+            st.subheader(l["forecast_statistics"])
 
             col1, col2, col3 = st.columns(3)
 
             with col1:
                 st.metric(
-                    "Projected Population (End)",
+                    l["projected_population_end"],
                     f"{forecast_data[-1]:,.0f}",
                     f"{((forecast_data[-1] - current_population) / current_population * 100):+.1f}%",
                 )
@@ -218,7 +218,7 @@ def show_population_forecast(data, models, l):
             with col2:
                 max_population = max(forecast_data)
                 st.metric(
-                    "Peak Population",
+                    l["peak_population"],
                     f"{max_population:,.0f}",
                     f"{((max_population - current_population) / current_population * 100):+.1f}%",
                 )
@@ -226,13 +226,13 @@ def show_population_forecast(data, models, l):
             with col3:
                 avg_forecast = np.mean(forecast_data)
                 st.metric(
-                    "Average (Forecast Period)",
+                    l["average_forecast_period"],
                     f"{avg_forecast:,.0f}",
                     f"{((avg_forecast - current_population) / current_population * 100):+.1f}%",
                 )
 
             # Scenario impact
-            st.subheader("Scenario Impact")
+            st.subheader(l["scenario_impact"])
             
             # Add Malaysian context explanations
             with st.expander("📊 Scenario Explanations", expanded=False):
@@ -244,7 +244,7 @@ def show_population_forecast(data, models, l):
                 **Economic Impact**: Population changes due to economic fluctuations affecting crime rates and sentencing patterns
                 """)
             
-            create_scenario_comparison(population_data, forecast_months, models)
+            create_scenario_comparison(population_data, forecast_months, models, l)
 
         else:
             st.warning("Unable to generate forecast. Please check model availability.")
@@ -353,7 +353,7 @@ def get_scenario_factor(scenario, month_index):
         return 1.0
 
 
-def create_scenario_comparison(data, months, models):
+def create_scenario_comparison(data, months, models, l):
     """
     Create scenario comparison visualization for Malaysian prison context
     """
@@ -391,9 +391,9 @@ def create_scenario_comparison(data, months, models):
                 )
 
         fig.update_layout(
-            title="Population Forecast - Scenario Comparison",
-            xaxis_title="Date",
-            yaxis_title="Number of Prisoners",
+            title=l["population_forecast_scenario_comparison"],
+            xaxis_title=l["date"],
+            yaxis_title=l["number_of_prisoners"],
             hovermode="x unified",
         )
 
